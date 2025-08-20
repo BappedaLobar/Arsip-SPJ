@@ -42,6 +42,7 @@ export const SpjTable = ({
             <TableHead>Kode Rekening</TableHead>
             <TableHead className="w-[180px]">Tanggal</TableHead>
             <TableHead>Jenis SPJ</TableHead>
+            <TableHead>Bidang</TableHead>
             <TableHead className="w-[30%]">Uraian</TableHead>
             <TableHead className="text-right">Terbilang (Rp)</TableHead>
             <TableHead>Berkas</TableHead>
@@ -54,7 +55,7 @@ export const SpjTable = ({
           {isLoading ? (
             Array.from({ length: 5 }).map((_, index) => (
               <TableRow key={index}>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={9}>
                   <Skeleton className="h-8 w-full" />
                 </TableCell>
               </TableRow>
@@ -78,6 +79,7 @@ export const SpjTable = ({
                     {item.jenisSpj}
                   </Badge>
                 </TableCell>
+                <TableCell>{item.bidang || "-"}</TableCell>
                 <TableCell>{item.uraian}</TableCell>
                 <TableCell className="text-right">
                   {`Rp ${item.jumlah.toLocaleString("id-ID")}`}
@@ -129,7 +131,7 @@ export const SpjTable = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={9} className="h-24 text-center">
                 Belum ada data. Silakan tambahkan arsip baru.
               </TableCell>
             </TableRow>

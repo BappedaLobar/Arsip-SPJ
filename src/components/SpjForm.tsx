@@ -37,15 +37,17 @@ import {
   Tags,
   UploadCloud,
   Cloud,
+  Briefcase,
 } from "lucide-react";
 import { format } from "date-fns";
-import { SPJ } from "@/types/spj";
+import { SPJ, bidangOptions } from "@/types/spj";
 import { gapi } from "gapi-script";
 
 const formSchema = z.object({
   nomorPembukuan: z.string().min(1, "No. Pembukuan harus diisi"),
   kodeRekening: z.string().min(1, "Kode Rekening harus diisi"),
   jenisSpj: z.enum(["GU", "LS"], { required_error: "Jenis SPJ harus dipilih" }),
+  bidang: z.enum(bidangOptions, { required_error: "Bidang harus dipilih" }),
   tanggal: z.date({ required_error: "Tanggal harus diisi" }),
   uraian: z.string().min(1, "Uraian harus diisi"),
   jumlah: z.coerce.number().min(1, "Jumlah harus lebih dari 0"),
@@ -84,6 +86,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
         uraian: "",
         jumlah: 0,
         jenisSpj: undefined,
+        bidang: undefined,
         tanggal: undefined,
         file: undefined,
       });
@@ -97,6 +100,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
       nomorPembukuan: values.nomorPembukuan,
       kodeRekening: values.kodeRekening,
       jenisSpj: values.jenisSpj,
+      bidang: values.bidang,
       tanggal: values.tanggal,
       uraian: values.uraian,
       jumlah: values.jumlah,
@@ -170,7 +174,6 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        {/* ... form fields lainnya tetap sama ... */}
         <FormField
           control={form.control}
           name="nomorPembukuan"
@@ -221,6 +224,33 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                 <SelectContent>
                   <SelectItem value="GU">SPJ GU</SelectItem>
                   <SelectItem value="LS">SPJ LS</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="bidang"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center">
+                <Briefcase className="mr-2 h-4 w-4 text-primary" />
+                Bidang
+              </FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih bidang" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {bidangOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
