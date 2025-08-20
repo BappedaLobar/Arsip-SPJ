@@ -61,17 +61,17 @@ const Index = () => {
     if (year !== "all") {
       const yearInt = parseInt(year);
       if (month !== "all") {
-        // Filter by specific month and year
-        const monthInt = parseInt(month) - 1;
-        const startDate = new Date(yearInt, monthInt, 1);
-        const endDate = new Date(yearInt, monthInt + 1, 0);
+        // Filter by specific month and year, using UTC to avoid timezone issues
+        const monthInt = parseInt(month) - 1; // JS months are 0-indexed
+        const startDate = new Date(Date.UTC(yearInt, monthInt, 1));
+        const endDate = new Date(Date.UTC(yearInt, monthInt + 1, 0));
         query = query
           .gte("tanggal", startDate.toISOString().split("T")[0])
           .lte("tanggal", endDate.toISOString().split("T")[0]);
       } else {
-        // Filter by year only
-        const startDate = new Date(yearInt, 0, 1);
-        const endDate = new Date(yearInt, 11, 31);
+        // Filter by year only, using UTC
+        const startDate = new Date(Date.UTC(yearInt, 0, 1));
+        const endDate = new Date(Date.UTC(yearInt, 11, 31));
         query = query
           .gte("tanggal", startDate.toISOString().split("T")[0])
           .lte("tanggal", endDate.toISOString().split("T")[0]);
