@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input"; // Import Input component
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ, bidangOptions } from "@/types/spj";
 import { exportToExcel } from "@/lib/excelGenerator";
-import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud } from "lucide-react";
+import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud, Search } from "lucide-react"; // Import Search icon
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -29,7 +30,7 @@ import {
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
-import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog"; // Import the new component
+import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -41,7 +42,8 @@ const Index = () => {
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedBidang, setSelectedBidang] = useState<string>("all");
-  const [isDownloadOptionsOpen, setIsDownloadOptionsOpen] = useState(false); // New state for download options dialog
+  const [isDownloadOptionsOpen, setIsDownloadOptionsOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState<string>(""); // New state for search keyword
 
   const years = ["2023", "2024", "2025", "2026"];
   const months = [
@@ -63,17 +65,15 @@ const Index = () => {
     setIsLoading(true);
     let query = supabase.from("spj").select("*");
 
-    // Apply year filter if a specific year is selected
     if (year !== "all") {
       const yearInt = parseInt(year);
       const startDate = new Date(Date.UTC(yearInt, 0, 1));
-      const endDate = new Date(Date.UTC(yearInt, 11, 31, 23, 59, 59, 999)); // End of the year
+      const endDate = new Date(Date.UTC(yearInt, 11, 31, 23, 59, 59, 999));
       query = query
         .gte("tanggal", startDate.toISOString().split("T")[0])
         .lte("tanggal", endDate.toISOString().split("T")[0]);
     }
 
-    // Apply bidang filter
     if (bidang !== "all") {
       query = query.eq("bidang", bidang);
     }
@@ -84,7 +84,6 @@ const Index = () => {
       showError("Gagal memuat data: " + error.message);
     } else {
       let formattedData = data.map((item: any) => {
-        // Correctly parse the date string to avoid timezone issues.
         const dateParts = item.tanggal.split('-').map(Number);
         const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
 
@@ -101,9 +100,8 @@ const Index = () => {
         };
       });
 
-      // Apply month filter client-side if a specific month is selected
       if (month !== "all") {
-        const monthInt = parseInt(month) - 1; // JS months are 0-indexed
+        const monthInt = parseInt(month) - 1;
         formattedData = formattedData.filter(item => item.tanggal.getMonth() === monthInt);
       }
 
@@ -115,6 +113,17 @@ const Index = () => {
   useEffect(() => {
     fetchSpjData(selectedYear, selectedMonth, selectedBidang);
   }, [selectedYear, selectedMonth, selectedBidang]);
+
+  // Filter SPJ data based on search keyword
+  const filteredSpjData = useMemo(() => {
+    if (!searchKeyword) {
+      return spjData;
+    }
+    const lowercasedKeyword = searchKeyword.toLowerCase();
+    return spjData.filter(item =>
+      item.uraian.toLowerCase().includes(lowercasedKeyword)
+    );
+  }, [spjData, searchKeyword]);
 
   const handleSaveSpj = async (
     data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }
@@ -130,7 +139,6 @@ const Index = () => {
         fileToUpload = data.file;
         fileName = `${new Date().toISOString()}_${data.file.name}`;
       } else {
-        // Handle Google Drive file
         const response = await fetch(data.file.url, {
           headers: {
             Authorization: `Bearer ${data.file.token}`,
@@ -309,11 +317,11 @@ const Index = () => {
     setSelectedYear("all");
     setSelectedMonth("all");
     setSelectedBidang("all");
+    setSearchKeyword(""); // Reset search keyword as well
   };
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    // No need to reset month here, as month filter will now work independently
   };
 
   const fetchFilesForDownload = async (year: string, month: string, bidang: string) => {
@@ -347,7 +355,6 @@ const Index = () => {
       return [];
     }
 
-    // Client-side filter for month if year is 'all'
     let filteredData = data;
     if (year === "all" && month !== "all") {
       const monthInt = parseInt(month) - 1;
@@ -363,7 +370,6 @@ const Index = () => {
   const handleDownloadArchives = async (yearToDownload: string, monthToDownload: string) => {
     const toastId = showLoading("Mempersiapkan unduhan arsip...");
     try {
-        // Use the selectedBidang from the main filter for the download scope
         const filesToDownload = await fetchFilesForDownload(yearToDownload, monthToDownload, selectedBidang);
 
         if (filesToDownload.length === 0) {
@@ -381,7 +387,7 @@ const Index = () => {
                     const response = await fetch(item.file_url);
                     if (!response.ok) {
                         console.warn(`Gagal mengunduh file: ${item.file_url}. Melewati file ini.`);
-                        continue; // Skip this file and continue with others
+                        continue;
                     }
                     const blob = await response.blob();
                     const filename = item.file_url.split("/").pop() || "file";
@@ -413,7 +419,7 @@ const Index = () => {
             const monthLabel = months.find(m => m.value === monthToDownload)?.label;
             zipFileName += `_semua_tahun_${monthLabel}`;
         }
-        if (selectedBidang !== "all") { // Include bidang in filename if filtered
+        if (selectedBidang !== "all") {
             zipFileName += `_${selectedBidang}`;
         }
         zipFileName += ".zip";
@@ -525,7 +531,17 @@ const Index = () => {
             ))}
           </SelectContent>
         </Select>
-        {(selectedYear !== "all" || selectedMonth !== "all" || selectedBidang !== "all") && (
+        <div className="relative flex-grow max-w-xs"> {/* Added a wrapper div for the search input */}
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Cari uraian..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        {(selectedYear !== "all" || selectedMonth !== "all" || selectedBidang !== "all" || searchKeyword !== "") && (
           <Button variant="ghost" onClick={resetFilters}>
             <X className="mr-2 h-4 w-4" />
             Reset Filter
@@ -533,7 +549,7 @@ const Index = () => {
         )}
         <Button
           variant="outline"
-          onClick={() => setIsDownloadOptionsOpen(true)} // Open the new dialog
+          onClick={() => setIsDownloadOptionsOpen(true)}
           disabled={isLoading || spjData.length === 0}
         >
           <DownloadCloud className="mr-2 h-4 w-4" />
@@ -542,7 +558,7 @@ const Index = () => {
       </div>
 
       <SpjTable
-        data={spjData}
+        data={filteredSpjData} // Use filteredSpjData here
         onEdit={handleEdit}
         onDelete={handleDeleteSpj}
         onViewFile={handleViewFile}
