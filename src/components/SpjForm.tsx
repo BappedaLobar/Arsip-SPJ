@@ -56,7 +56,14 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
     const file = values.file?.[0];
-    onSubmit({ ...values, jenisSpj: values.jenisSpj!, tanggal: values.tanggal!, file });
+    onSubmit({
+      nomorSpj: values.nomorSpj,
+      jenisSpj: values.jenisSpj,
+      tanggal: values.tanggal,
+      uraian: values.uraian,
+      jumlah: values.jumlah,
+      file,
+    });
   };
 
   return (
