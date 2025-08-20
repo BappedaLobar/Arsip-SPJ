@@ -12,7 +12,7 @@ import { SpjTable } from "@/components/SpjTable";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { FileDown, PlusCircle } from "lucide-react";
+import { FileDown, PlusCircle, FolderArchive } from "lucide-react";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -34,9 +34,23 @@ const Index = () => {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Arsip SPJ Bappeda Lombok Barat</h1>
+        <div className="flex items-center gap-4">
+          <FolderArchive className="h-12 w-12 text-primary" />
+          <div className="text-left">
+            <h1 className="text-2xl font-bold tracking-tight">
+              ARSIP SPJ KEUANGAN
+            </h1>
+            <p className="text-muted-foreground">
+              BAPPEDA KAB. LOMBOK BARAT
+            </p>
+          </div>
+        </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => exportToPdf(spjData)} disabled={spjData.length === 0}>
+          <Button
+            variant="outline"
+            onClick={() => exportToPdf(spjData)}
+            disabled={spjData.length === 0}
+          >
             <FileDown className="mr-2 h-4 w-4" />
             Cetak Laporan (PDF)
           </Button>
