@@ -38,11 +38,11 @@ export const SpjTable = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>No. Pembukuan</TableHead>
+            <TableHead className="w-[150px]">No. Pembukuan</TableHead>
             <TableHead>Kode Rekening</TableHead>
-            <TableHead>Tanggal</TableHead>
+            <TableHead className="w-[180px]">Tanggal</TableHead>
             <TableHead>Jenis SPJ</TableHead>
-            <TableHead>Uraian</TableHead>
+            <TableHead className="w-[30%]">Uraian</TableHead>
             <TableHead className="text-right">Terbilang (Rp)</TableHead>
             <TableHead>Berkas</TableHead>
             <TableHead>
