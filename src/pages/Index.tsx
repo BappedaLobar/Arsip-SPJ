@@ -8,6 +8,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,7 +24,8 @@ import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
-import { FileDown, PlusCircle, FolderArchive, FileQuestion, X } from "lucide-react";
+import { exportToExcel } from "@/lib/excelGenerator";
+import { FileDown, PlusCircle, FolderArchive, FileQuestion, X, FileType, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -283,14 +290,24 @@ const Index = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => exportToPdf(spjData)}
-            disabled={spjData.length === 0}
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            Cetak Laporan (PDF)
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={spjData.length === 0}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Cetak Laporan
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => exportToPdf(spjData)}>
+                <FileType className="mr-2 h-4 w-4" />
+                <span>PDF</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportToExcel(spjData)}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                <span>Excel</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Dialog open={isFormOpen} onOpenChange={handleFormDialogChange}>
             <DialogTrigger asChild>
               <Button>
