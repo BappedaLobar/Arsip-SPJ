@@ -18,7 +18,7 @@ import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ, bidangOptions } from "@/types/spj";
 import { exportToExcel } from "@/lib/excelGenerator";
-import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet } from "lucide-react";
+import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -26,6 +26,8 @@ import {
   showLoading,
   dismissToast,
 } from "@/utils/toast";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import { format } from "date-fns";
 
 const Index = () => {
@@ -312,6 +314,122 @@ const Index = () => {
     // No need to reset month here, as month filter will now work independently
   };
 
+  const fetchFilesForDownload = async (year: string, month: string, bidang: string) => {
+    let query = supabase.from("spj").select("nomor_pembukuan, file_url").not("file_url", "is", null);
+
+    if (year !== "all") {
+      const yearInt = parseInt(year);
+      if (month !== "all") {
+        const monthInt = parseInt(month) - 1;
+        const startDate = new Date(Date.UTC(yearInt, monthInt, 1));
+        const endDate = new Date(Date.UTC(yearInt, monthInt + 1, 0));
+        query = query
+          .gte("tanggal", startDate.toISOString().split("T")[0])
+          .lte("tanggal", endDate.toISOString().split("T")[0]);
+      } else {
+        const startDate = new Date(Date.UTC(yearInt, 0, 1));
+        const endDate = new Date(Date.UTC(yearInt, 11, 31));
+        query = query
+          .gte("tanggal", startDate.toISOString().split("T")[0])
+          .lte("tanggal", endDate.toISOString().split("T")[0]);
+      }
+    } else if (month !== "all") { // If year is 'all' but month is selected, filter by month across all years
+      const monthInt = parseInt(month) - 1;
+      // This client-side filter is needed because Supabase doesn't have a direct 'month only' filter across years
+      // We fetch all data and then filter by month
+      const { data, error } = await query;
+      if (error) {
+        console.error("Error fetching files for download (month only):", error);
+        return [];
+      }
+      return data.filter((item: any) => {
+        const dateParts = item.tanggal.split('-').map(Number);
+        const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        return localDate.getMonth() === monthInt;
+      });
+    }
+
+
+    if (bidang !== "all") {
+      query = query.eq("bidang", bidang);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching files for download:", error);
+      return [];
+    }
+    return data;
+  };
+
+  const handleDownloadArchives = async () => {
+    const toastId = showLoading("Mempersiapkan unduhan arsip...");
+    try {
+        const filesToDownload = await fetchFilesForDownload(selectedYear, selectedMonth, selectedBidang);
+
+        if (filesToDownload.length === 0) {
+            dismissToast(toastId);
+            showError("Tidak ada file arsip yang ditemukan untuk kriteria yang dipilih.");
+            return;
+        }
+
+        const zip = new JSZip();
+        let filesAddedCount = 0;
+
+        for (const item of filesToDownload) {
+            if (item.file_url) {
+                try {
+                    const response = await fetch(item.file_url);
+                    if (!response.ok) {
+                        console.warn(`Gagal mengunduh file: ${item.file_url}. Melewati file ini.`);
+                        continue; // Skip this file and continue with others
+                    }
+                    const blob = await response.blob();
+                    const filename = item.file_url.split("/").pop() || "file";
+                    const originalFilename = filename.substring(filename.indexOf('_') + 1) || filename;
+                    zip.file(`${item.nomor_pembukuan}_${originalFilename}`, blob);
+                    filesAddedCount++;
+                } catch (e) {
+                    console.error(`Error adding file ${item.file_url} to zip:`, e);
+                }
+            }
+        }
+
+        if (filesAddedCount === 0) {
+            dismissToast(toastId);
+            showError("Tidak ada file yang berhasil diunduh untuk di-zip.");
+            return;
+        }
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+
+        let zipFileName = "arsip_spj";
+        if (selectedYear !== "all") {
+            zipFileName += `_${selectedYear}`;
+            if (selectedMonth !== "all") {
+                const monthLabel = months.find(m => m.value === selectedMonth)?.label;
+                zipFileName += `_${monthLabel}`;
+            }
+        } else if (selectedMonth !== "all") {
+            const monthLabel = months.find(m => m.value === selectedMonth)?.label;
+            zipFileName += `_semua_tahun_${monthLabel}`;
+        }
+        if (selectedBidang !== "all") {
+            zipFileName += `_${selectedBidang}`;
+        }
+        zipFileName += ".zip";
+
+        saveAs(zipBlob, zipFileName);
+        dismissToast(toastId);
+        showSuccess(`${filesAddedCount} file arsip berhasil diunduh dalam format ZIP.`);
+
+    } catch (error) {
+        dismissToast(toastId);
+        console.error("Error during archive download:", error);
+        showError("Terjadi kesalahan saat mengunduh arsip.");
+    }
+  };
+
   const { url: viewerUrl, type: viewerType } = getViewerInfo(selectedFileUrl);
 
   return (
@@ -414,6 +532,14 @@ const Index = () => {
             Reset Filter
           </Button>
         )}
+        <Button
+          variant="outline"
+          onClick={handleDownloadArchives}
+          disabled={isLoading || spjData.length === 0}
+        >
+          <DownloadCloud className="mr-2 h-4 w-4" />
+          Unduh Arsip
+        </Button>
       </div>
 
       <SpjTable
