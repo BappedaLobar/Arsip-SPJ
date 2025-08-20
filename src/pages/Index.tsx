@@ -19,6 +19,17 @@ import {
   showLoading,
   dismissToast,
 } from "@/utils/toast";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+} from "date-fns";
+
+type FilterType = "all" | "week" | "month" | "year";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -27,13 +38,29 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
+  const [filter, setFilter] = useState<FilterType>("all");
 
-  const fetchSpjData = async () => {
+  const fetchSpjData = async (activeFilter: FilterType) => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("spj")
-      .select("*")
-      .order("tanggal", { ascending: false });
+    let query = supabase.from("spj").select("*");
+
+    const now = new Date();
+
+    if (activeFilter === "week") {
+      const start = startOfWeek(now).toISOString();
+      const end = endOfWeek(now).toISOString();
+      query = query.gte("tanggal", start).lte("tanggal", end);
+    } else if (activeFilter === "month") {
+      const start = startOfMonth(now).toISOString();
+      const end = endOfMonth(now).toISOString();
+      query = query.gte("tanggal", start).lte("tanggal", end);
+    } else if (activeFilter === "year") {
+      const start = startOfYear(now).toISOString();
+      const end = endOfYear(now).toISOString();
+      query = query.gte("tanggal", start).lte("tanggal", end);
+    }
+
+    const { data, error } = await query.order("tanggal", { ascending: false });
 
     if (error) {
       showError("Gagal memuat data: " + error.message);
@@ -54,8 +81,8 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetchSpjData();
-  }, []);
+    fetchSpjData(filter);
+  }, [filter]);
 
   const handleSaveSpj = async (
     data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }
@@ -136,7 +163,7 @@ const Index = () => {
     dismissToast(toastId);
     setIsFormOpen(false);
     setEditingSpj(null);
-    fetchSpjData();
+    fetchSpjData(filter);
   };
 
   const handleDeleteSpj = async (id: string) => {
@@ -164,7 +191,7 @@ const Index = () => {
 
     dismissToast(toastId);
     showSuccess("Data berhasil dihapus!");
-    fetchSpjData();
+    fetchSpjData(filter);
   };
 
   const handleEdit = (spj: SPJ) => {
@@ -255,6 +282,22 @@ const Index = () => {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+
+      <div className="flex items-center mb-4">
+        <ToggleGroup
+          type="single"
+          value={filter}
+          onValueChange={(value: FilterType) => {
+            if (value) setFilter(value);
+          }}
+          defaultValue="all"
+        >
+          <ToggleGroupItem value="all">Semua</ToggleGroupItem>
+          <ToggleGroupItem value="year">Tahun Ini</ToggleGroupItem>
+          <ToggleGroupItem value="month">Bulan Ini</ToggleGroupItem>
+          <ToggleGroupItem value="week">Minggu Ini</ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <SpjTable
