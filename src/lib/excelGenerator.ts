@@ -2,6 +2,15 @@ import * as XLSX from "xlsx";
 import { SPJ } from "@/types/spj";
 
 export const exportToExcel = (data: SPJ[]) => {
+  // Data untuk kop surat
+  const kopSurat = [
+    ["PEMERINTAH KABUPATEN LOMBOK BARAT"],
+    ["BADAN PERENCANAAN PEMBANGUNAN DAERAH"],
+    ["Jalan Soekarno-Hatta, Giri Menang-Gerung, Kode Pos 83363"],
+    ["Telepon (0370) 6183012, Faksimili (0370) 6183012"],
+    ["Laman: bappeda.lombokbaratkab.go.id, Pos-el: bappeda@lombokbaratkab.go.id"],
+  ];
+
   const headers = [
     "No",
     "No. Pembukuan",
@@ -24,8 +33,17 @@ export const exportToExcel = (data: SPJ[]) => {
     "Terbilang (Rp)": item.jumlah,
   }));
 
-  const worksheet = XLSX.utils.json_to_sheet(body, { header: headers });
-  
+  const worksheet = XLSX.utils.json_to_sheet([], { skipHeader: true });
+
+  // Tambahkan kop surat ke worksheet
+  XLSX.utils.sheet_add_aoa(worksheet, kopSurat, { origin: "A1" });
+
+  // Tambahkan judul laporan
+  XLSX.utils.sheet_add_aoa(worksheet, [["Laporan Arsip SPJ"]], { origin: "A7" });
+
+  // Tambahkan data tabel
+  XLSX.utils.sheet_add_json(worksheet, body, { origin: "A9", header: headers });
+
   // Set column widths for better readability
   worksheet['!cols'] = [
     { wch: 5 },   // No
@@ -40,7 +58,7 @@ export const exportToExcel = (data: SPJ[]) => {
 
   // Format the currency column
   body.forEach((_row, index) => {
-    const cellRef = XLSX.utils.encode_cell({ r: index + 1, c: 7 });
+    const cellRef = XLSX.utils.encode_cell({ r: index + 9, c: 7 });
     if (worksheet[cellRef]) {
       worksheet[cellRef].t = 'n';
       worksheet[cellRef].z = '"Rp"#,##0';
