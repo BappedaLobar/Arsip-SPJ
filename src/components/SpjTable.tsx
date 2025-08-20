@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash2, Link as LinkIcon } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Link as LinkIcon, Eye } from "lucide-react";
 import { SPJ } from "@/types/spj";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,6 +21,7 @@ type SpjTableProps = {
   data: SPJ[];
   onDelete: (id: string) => void;
   onEdit: (spj: SPJ) => void;
+  onViewFile: (url: string) => void;
   isLoading: boolean;
 };
 
@@ -28,6 +29,7 @@ export const SpjTable = ({
   data,
   onDelete,
   onEdit,
+  onViewFile,
   isLoading,
 }: SpjTableProps) => {
   return (
@@ -36,12 +38,10 @@ export const SpjTable = ({
         <TableHeader>
           <TableRow>
             <TableHead>No. Pembukuan</TableHead>
-            <TableHead>Kode Rekening</TableHead>
-            <TableHead>Jenis</TableHead>
-            <TableHead>Tanggal</TableHead>
             <TableHead>Uraian</TableHead>
             <TableHead className="text-right">Terbilang (Rp)</TableHead>
-            <TableHead>File</TableHead>
+            <TableHead>Tanggal</TableHead>
+            <TableHead>Berkas</TableHead>
             <TableHead>
               <span className="sr-only">Aksi</span>
             </TableHead>
@@ -51,7 +51,7 @@ export const SpjTable = ({
           {isLoading ? (
             Array.from({ length: 5 }).map((_, index) => (
               <TableRow key={index}>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={6}>
                   <Skeleton className="h-8 w-full" />
                 </TableCell>
               </TableRow>
@@ -62,8 +62,10 @@ export const SpjTable = ({
                 <TableCell className="font-medium">
                   {item.nomorPembukuan}
                 </TableCell>
-                <TableCell>{item.kodeRekening}</TableCell>
-                <TableCell>{item.jenisSpj}</TableCell>
+                <TableCell>{item.uraian}</TableCell>
+                <TableCell className="text-right">
+                  {`Rp ${item.jumlah.toLocaleString("id-ID")}`}
+                </TableCell>
                 <TableCell>
                   {item.tanggal.toLocaleDateString("id-ID", {
                     year: "numeric",
@@ -71,20 +73,18 @@ export const SpjTable = ({
                     day: "numeric",
                   })}
                 </TableCell>
-                <TableCell>{item.uraian}</TableCell>
-                <TableCell className="text-right">
-                  {`Rp ${item.jumlah.toLocaleString("id-ID")}`}
-                </TableCell>
                 <TableCell>
                   {item.fileUrl ? (
-                    <Button asChild variant="link" className="p-0 h-auto">
-                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer">
-                        <LinkIcon className="mr-2 h-4 w-4" />
-                        Lihat File
-                      </a>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewFile(item.fileUrl!)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Lihat
                     </Button>
                   ) : (
-                    "Tidak ada file"
+                    <span className="text-xs text-muted-foreground">Tidak ada</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -96,6 +96,12 @@ export const SpjTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                       <DropdownMenuItem>
+                        <a href={item.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
+                          <LinkIcon className="mr-2 h-4 w-4" />
+                          <span>Lihat di Tab Baru</span>
+                        </a>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(item)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         <span>Edit</span>
@@ -114,7 +120,7 @@ export const SpjTable = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={6} className="h-24 text-center">
                 Belum ada data. Silakan tambahkan arsip baru.
               </TableCell>
             </TableRow>

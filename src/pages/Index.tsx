@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
+import { FileViewer } from "@/components/FileViewer";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -26,6 +27,7 @@ const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSpj, setEditingSpj] = useState<SPJ | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
 
   const fetchSpjData = async () => {
     setIsLoading(true);
@@ -70,7 +72,7 @@ const Index = () => {
         .upload(fileName, file);
 
       if (uploadError) {
-        dismissToast(toastId);
+        dismissToast(uploadError.message);
         showError("Gagal mengunggah file: " + uploadError.message);
         return;
       }
@@ -159,7 +161,7 @@ const Index = () => {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 max-w-full px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <FolderArchive className="h-12 w-12 text-primary" />
@@ -209,12 +211,20 @@ const Index = () => {
         </div>
       </div>
 
-      <SpjTable
-        data={spjData}
-        onEdit={handleEdit}
-        onDelete={handleDeleteSpj}
-        isLoading={isLoading}
-      />
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="md:w-3/5 lg:w-2/3">
+          <SpjTable
+            data={spjData}
+            onEdit={handleEdit}
+            onDelete={handleDeleteSpj}
+            onViewFile={setSelectedFileUrl}
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="md:w-2/5 lg:w-1/3 h-[70vh]">
+          <FileViewer fileUrl={selectedFileUrl} />
+        </div>
+      </div>
       <MadeWithDyad />
     </div>
   );
