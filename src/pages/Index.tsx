@@ -88,17 +88,26 @@ const Index = () => {
     if (error) {
       showError("Gagal memuat data: " + error.message);
     } else {
-      const formattedData = data.map((item: any) => ({
-        id: item.id,
-        nomorPembukuan: item.nomor_pembukuan,
-        kodeRekening: item.kode_rekening,
-        jenisSpj: item.jenis_spj,
-        bidang: item.bidang,
-        tanggal: new Date(item.tanggal),
-        uraian: item.uraian,
-        jumlah: item.jumlah,
-        fileUrl: item.file_url,
-      }));
+      const formattedData = data.map((item: any) => {
+        // Correctly parse the date string to avoid timezone issues.
+        // item.tanggal from Supabase is a string like "2024-07-20".
+        // new Date("2024-07-20") can shift the day depending on the user's timezone.
+        // This method creates the date in the user's local timezone.
+        const dateParts = item.tanggal.split('-').map(Number);
+        const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+        return {
+          id: item.id,
+          nomorPembukuan: item.nomor_pembukuan,
+          kodeRekening: item.kode_rekening,
+          jenisSpj: item.jenis_spj,
+          bidang: item.bidang,
+          tanggal: localDate,
+          uraian: item.uraian,
+          jumlah: item.jumlah,
+          fileUrl: item.file_url,
+        };
+      });
       setSpjData(formattedData);
     }
     setIsLoading(false);
