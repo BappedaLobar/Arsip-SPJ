@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Pencil, Trash2, Link as LinkIcon, Eye } from "lucide-react";
 import { SPJ } from "@/types/spj";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 type SpjTableProps = {
   data: SPJ[];
@@ -38,6 +39,8 @@ export const SpjTable = ({
         <TableHeader>
           <TableRow>
             <TableHead>No. Pembukuan</TableHead>
+            <TableHead>Kode Rekening</TableHead>
+            <TableHead>Jenis SPJ</TableHead>
             <TableHead>Uraian</TableHead>
             <TableHead className="text-right">Terbilang (Rp)</TableHead>
             <TableHead>Tanggal</TableHead>
@@ -51,7 +54,7 @@ export const SpjTable = ({
           {isLoading ? (
             Array.from({ length: 5 }).map((_, index) => (
               <TableRow key={index}>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={8}>
                   <Skeleton className="h-8 w-full" />
                 </TableCell>
               </TableRow>
@@ -61,6 +64,12 @@ export const SpjTable = ({
               <TableRow key={item.id}>
                 <TableCell className="font-medium">
                   {item.nomorPembukuan}
+                </TableCell>
+                <TableCell>{item.kodeRekening}</TableCell>
+                <TableCell>
+                  <Badge variant={item.jenisSpj === "GU" ? "default" : "secondary"}>
+                    {item.jenisSpj}
+                  </Badge>
                 </TableCell>
                 <TableCell>{item.uraian}</TableCell>
                 <TableCell className="text-right">
@@ -120,7 +129,7 @@ export const SpjTable = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={8} className="h-24 text-center">
                 Belum ada data. Silakan tambahkan arsip baru.
               </TableCell>
             </TableRow>
