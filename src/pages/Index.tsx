@@ -237,6 +237,41 @@ const Index = () => {
     setIsFileViewerOpen(true);
   };
 
+  const handleDownloadFile = async (url: string) => {
+    if (!url) {
+      showError("Tidak ada file untuk diunduh.");
+      return;
+    }
+    const toastId = showLoading("Mengunduh file...");
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Gagal mengunduh file: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      
+      const filename = url.split("/").pop() || "downloaded-file";
+      const originalFilename = filename.substring(filename.indexOf('_') + 1);
+      link.download = originalFilename;
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(link.href);
+      
+      dismissToast(toastId);
+      showSuccess("File berhasil diunduh.");
+    } catch (error) {
+      dismissToast(toastId);
+      console.error("Download error:", error);
+      showError(error instanceof Error ? error.message : "Terjadi kesalahan saat mengunduh file.");
+    }
+  };
+
   const getViewerInfo = (url: string | null): { url: string; type: 'iframe' | 'image' | 'unsupported' } => {
     if (!url) return { url: "", type: 'unsupported' };
     const extension = url.split('?')[0].split('.').pop()?.toLowerCase();
@@ -371,6 +406,7 @@ const Index = () => {
         onEdit={handleEdit}
         onDelete={handleDeleteSpj}
         onViewFile={handleViewFile}
+        onDownload={handleDownloadFile}
         isLoading={isLoading}
       />
 

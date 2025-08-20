@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash2, Link as LinkIcon, Eye } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Download, Eye } from "lucide-react";
 import { SPJ } from "@/types/spj";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ type SpjTableProps = {
   onDelete: (id: string) => void;
   onEdit: (spj: SPJ) => void;
   onViewFile: (url: string) => void;
+  onDownload: (url: string) => void;
   isLoading: boolean;
 };
 
@@ -31,6 +32,7 @@ export const SpjTable = ({
   onDelete,
   onEdit,
   onViewFile,
+  onDownload,
   isLoading,
 }: SpjTableProps) => {
   return (
@@ -107,11 +109,12 @@ export const SpjTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                       <DropdownMenuItem asChild>
-                        <a href={item.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center w-full cursor-pointer">
-                          <LinkIcon className="mr-2 h-4 w-4" />
-                          <span>Lihat di Tab Baru</span>
-                        </a>
+                      <DropdownMenuItem
+                        onClick={() => item.fileUrl && onDownload(item.fileUrl)}
+                        disabled={!item.fileUrl}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        <span>Unduh File Arsip</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(item)}>
                         <Pencil className="mr-2 h-4 w-4" />
