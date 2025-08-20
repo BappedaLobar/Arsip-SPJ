@@ -29,6 +29,7 @@ import {
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
+import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog"; // Import the new component
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -40,6 +41,7 @@ const Index = () => {
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedBidang, setSelectedBidang] = useState<string>("all");
+  const [isDownloadOptionsOpen, setIsDownloadOptionsOpen] = useState(false); // New state for download options dialog
 
   const years = ["2023", "2024", "2025", "2026"];
   const months = [
@@ -315,7 +317,7 @@ const Index = () => {
   };
 
   const fetchFilesForDownload = async (year: string, month: string, bidang: string) => {
-    let query = supabase.from("spj").select("nomor_pembukuan, file_url").not("file_url", "is", null);
+    let query = supabase.from("spj").select("nomor_pembukuan, file_url, tanggal").not("file_url", "is", null);
 
     if (year !== "all") {
       const yearInt = parseInt(year);
@@ -333,22 +335,7 @@ const Index = () => {
           .gte("tanggal", startDate.toISOString().split("T")[0])
           .lte("tanggal", endDate.toISOString().split("T")[0]);
       }
-    } else if (month !== "all") { // If year is 'all' but month is selected, filter by month across all years
-      const monthInt = parseInt(month) - 1;
-      // This client-side filter is needed because Supabase doesn't have a direct 'month only' filter across years
-      // We fetch all data and then filter by month
-      const { data, error } = await query;
-      if (error) {
-        console.error("Error fetching files for download (month only):", error);
-        return [];
-      }
-      return data.filter((item: any) => {
-        const dateParts = item.tanggal.split('-').map(Number);
-        const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-        return localDate.getMonth() === monthInt;
-      });
     }
-
 
     if (bidang !== "all") {
       query = query.eq("bidang", bidang);
@@ -359,13 +346,25 @@ const Index = () => {
       console.error("Error fetching files for download:", error);
       return [];
     }
-    return data;
+
+    // Client-side filter for month if year is 'all'
+    let filteredData = data;
+    if (year === "all" && month !== "all") {
+      const monthInt = parseInt(month) - 1;
+      filteredData = data.filter((item: any) => {
+        const dateParts = item.tanggal.split('-').map(Number);
+        const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        return localDate.getMonth() === monthInt;
+      });
+    }
+    return filteredData;
   };
 
-  const handleDownloadArchives = async () => {
+  const handleDownloadArchives = async (yearToDownload: string, monthToDownload: string) => {
     const toastId = showLoading("Mempersiapkan unduhan arsip...");
     try {
-        const filesToDownload = await fetchFilesForDownload(selectedYear, selectedMonth, selectedBidang);
+        // Use the selectedBidang from the main filter for the download scope
+        const filesToDownload = await fetchFilesForDownload(yearToDownload, monthToDownload, selectedBidang);
 
         if (filesToDownload.length === 0) {
             dismissToast(toastId);
@@ -404,17 +403,17 @@ const Index = () => {
         const zipBlob = await zip.generateAsync({ type: "blob" });
 
         let zipFileName = "arsip_spj";
-        if (selectedYear !== "all") {
-            zipFileName += `_${selectedYear}`;
-            if (selectedMonth !== "all") {
-                const monthLabel = months.find(m => m.value === selectedMonth)?.label;
+        if (yearToDownload !== "all") {
+            zipFileName += `_${yearToDownload}`;
+            if (monthToDownload !== "all") {
+                const monthLabel = months.find(m => m.value === monthToDownload)?.label;
                 zipFileName += `_${monthLabel}`;
             }
-        } else if (selectedMonth !== "all") {
-            const monthLabel = months.find(m => m.value === selectedMonth)?.label;
+        } else if (monthToDownload !== "all") {
+            const monthLabel = months.find(m => m.value === monthToDownload)?.label;
             zipFileName += `_semua_tahun_${monthLabel}`;
         }
-        if (selectedBidang !== "all") {
+        if (selectedBidang !== "all") { // Include bidang in filename if filtered
             zipFileName += `_${selectedBidang}`;
         }
         zipFileName += ".zip";
@@ -534,7 +533,7 @@ const Index = () => {
         )}
         <Button
           variant="outline"
-          onClick={handleDownloadArchives}
+          onClick={() => setIsDownloadOptionsOpen(true)} // Open the new dialog
           disabled={isLoading || spjData.length === 0}
         >
           <DownloadCloud className="mr-2 h-4 w-4" />
@@ -580,6 +579,16 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DownloadOptionsDialog
+        isOpen={isDownloadOptionsOpen}
+        onOpenChange={setIsDownloadOptionsOpen}
+        onDownload={handleDownloadArchives}
+        years={years}
+        months={months}
+        initialYear={selectedYear}
+        initialMonth={selectedMonth}
+      />
     </div>
   );
 };
