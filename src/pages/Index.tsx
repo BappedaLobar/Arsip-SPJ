@@ -14,12 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input"; // Import Input component
+import { Input } from "@/components/ui/input";
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ, bidangOptions } from "@/types/spj";
 import { exportToExcel } from "@/lib/excelGenerator";
-import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud, Search } from "lucide-react"; // Import Search icon
+import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -31,6 +31,14 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog";
+import { gapi } from "gapi-script"; // Import gapi
+
+// Define a simple interface for the Google API authorization result
+interface GoogleAuthResult {
+  access_token?: string;
+  error?: string;
+  // Add other properties if needed, e.g., expires_in, token_type
+}
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -43,7 +51,8 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedBidang, setSelectedBidang] = useState<string>("all");
   const [isDownloadOptionsOpen, setIsDownloadOptionsOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState<string>(""); // New state for search keyword
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [isGoogleApiLoaded, setIsGoogleApiLoaded] = useState(false); // New state for Google API loading
 
   const years = ["2023", "2024", "2025", "2026"];
   const months = [
@@ -60,6 +69,35 @@ const Index = () => {
     { value: "11", label: "November" },
     { value: "12", label: "Desember" },
   ];
+
+  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+  const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"; // Scope for creating/modifying files created by the app
+
+  // Load Google API client
+  useEffect(() => {
+    const loadClient = () => {
+      gapi.load("client:auth2", () => {
+        gapi.client.init({
+          apiKey: API_KEY,
+          clientId: CLIENT_ID,
+          scope: DRIVE_SCOPE,
+          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+        }).then(() => {
+          setIsGoogleApiLoaded(true);
+        }).catch(error => {
+          console.error("Error initializing Google API client:", error);
+          showError("Gagal memuat Google API untuk transfer file.");
+        });
+      });
+    };
+
+    if (API_KEY && CLIENT_ID) {
+      loadClient();
+    } else {
+      console.warn("Google API Key or Client ID is missing. Google Drive features will be limited.");
+    }
+  }, [API_KEY, CLIENT_ID]);
 
   const fetchSpjData = async (year: string, month: string, bidang: string) => {
     setIsLoading(true);
@@ -114,7 +152,6 @@ const Index = () => {
     fetchSpjData(selectedYear, selectedMonth, selectedBidang);
   }, [selectedYear, selectedMonth, selectedBidang]);
 
-  // Filter SPJ data based on search keyword
   const filteredSpjData = useMemo(() => {
     if (!searchKeyword) {
       return spjData;
@@ -287,6 +324,89 @@ const Index = () => {
     }
   };
 
+  const handleTransferToDrive = async (spj: SPJ) => {
+    if (!spj.fileUrl) {
+      showError("Tidak ada file untuk ditransfer.");
+      return;
+    }
+
+    if (!isGoogleApiLoaded) {
+      showError("Google API belum dimuat. Coba lagi sebentar.");
+      return;
+    }
+
+    const toastId = showLoading("Mempersiapkan transfer ke Google Drive...");
+
+    try {
+      // Authorize if not already authorized with the correct scope
+      const authResult = await new Promise<GoogleAuthResult>((resolve, reject) => {
+        gapi.auth.authorize({
+          client_id: CLIENT_ID,
+          scope: DRIVE_SCOPE,
+          immediate: false, // Force consent screen if scope not granted
+        }, (authRes: GoogleAuthResult) => { // Use the custom interface here
+          if (authRes && !authRes.error) {
+            resolve(authRes);
+          } else {
+            reject(authRes?.error || "Authorization failed.");
+          }
+        });
+      });
+
+      if (!authResult || authResult.error) {
+        dismissToast(toastId);
+        showError("Gagal otentikasi dengan Google Drive. Pastikan Anda memberikan izin.");
+        return;
+      }
+
+      // Fetch the file from Supabase Storage
+      const response = await fetch(spj.fileUrl);
+      if (!response.ok) {
+        throw new Error(`Gagal mengambil file dari Supabase: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+
+      // Extract original filename
+      const filenameParts = spj.fileUrl.split("/").pop()?.split('_');
+      const originalFilename = filenameParts && filenameParts.length > 1 ? filenameParts.slice(1).join('_') : `arsip_${spj.nomorPembukuan}`;
+      const fileExtension = originalFilename.split('.').pop();
+      const mimeType = blob.type || `application/${fileExtension}`; // Fallback mime type
+
+      const fileMetadata = {
+        name: `${spj.nomorPembukuan}_${originalFilename}`, // Name in Google Drive
+        mimeType: mimeType,
+      };
+
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
+      form.append('file', blob);
+
+      // Upload to Google Drive
+      const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authResult.access_token}`,
+        },
+        body: form,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(`Gagal mengunggah ke Google Drive: ${errorData.error.message || uploadResponse.statusText}`);
+      }
+
+      const uploadedFile = await uploadResponse.json();
+      dismissToast(toastId);
+      showSuccess(`File berhasil ditransfer ke Google Drive! ID: ${uploadedFile.id}`);
+      console.log("Uploaded file to Google Drive:", uploadedFile);
+
+    } catch (error) {
+      dismissToast(toastId);
+      console.error("Error transferring to Google Drive:", error);
+      showError(error instanceof Error ? error.message : "Terjadi kesalahan saat transfer ke Google Drive.");
+    }
+  };
+
   const getViewerInfo = (url: string | null): { url: string; type: 'iframe' | 'image' | 'unsupported' } => {
     if (!url) return { url: "", type: 'unsupported' };
     const extension = url.split('?')[0].split('.').pop()?.toLowerCase();
@@ -317,7 +437,7 @@ const Index = () => {
     setSelectedYear("all");
     setSelectedMonth("all");
     setSelectedBidang("all");
-    setSearchKeyword(""); // Reset search keyword as well
+    setSearchKeyword("");
   };
 
   const handleYearChange = (year: string) => {
@@ -531,7 +651,7 @@ const Index = () => {
             ))}
           </SelectContent>
         </Select>
-        <div className="relative flex-grow max-w-xs"> {/* Added a wrapper div for the search input */}
+        <div className="relative flex-grow max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
@@ -558,11 +678,12 @@ const Index = () => {
       </div>
 
       <SpjTable
-        data={filteredSpjData} // Use filteredSpjData here
+        data={filteredSpjData}
         onEdit={handleEdit}
         onDelete={handleDeleteSpj}
         onViewFile={handleViewFile}
         onDownload={handleDownloadFile}
+        onTransferToDrive={handleTransferToDrive}
         isLoading={isLoading}
       />
 

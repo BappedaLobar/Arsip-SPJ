@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash2, Download, Eye } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Download, Eye, CloudUpload } from "lucide-react"; // Import CloudUpload icon
 import { SPJ } from "@/types/spj";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ type SpjTableProps = {
   onEdit: (spj: SPJ) => void;
   onViewFile: (url: string) => void;
   onDownload: (url: string) => void;
+  onTransferToDrive: (spj: SPJ) => void; // New prop for Google Drive transfer
   isLoading: boolean;
 };
 
@@ -33,6 +34,7 @@ export const SpjTable = ({
   onEdit,
   onViewFile,
   onDownload,
+  onTransferToDrive, // Destructure new prop
   isLoading,
 }: SpjTableProps) => {
   return (
@@ -115,6 +117,13 @@ export const SpjTable = ({
                       >
                         <Download className="mr-2 h-4 w-4" />
                         <span>Unduh File Arsip</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => item.fileUrl && onTransferToDrive(item)} // New menu item
+                        disabled={!item.fileUrl}
+                      >
+                        <CloudUpload className="mr-2 h-4 w-4" />
+                        <span>Transfer ke Google Drive</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(item)}>
                         <Pencil className="mr-2 h-4 w-4" />
