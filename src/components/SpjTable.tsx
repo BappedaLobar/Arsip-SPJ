@@ -40,10 +40,10 @@ export const SpjTable = ({
           <TableRow>
             <TableHead>No. Pembukuan</TableHead>
             <TableHead>Kode Rekening</TableHead>
+            <TableHead>Tanggal</TableHead>
             <TableHead>Jenis SPJ</TableHead>
             <TableHead>Uraian</TableHead>
             <TableHead className="text-right">Terbilang (Rp)</TableHead>
-            <TableHead>Tanggal</TableHead>
             <TableHead>Berkas</TableHead>
             <TableHead>
               <span className="sr-only">Aksi</span>
@@ -67,6 +67,13 @@ export const SpjTable = ({
                 </TableCell>
                 <TableCell>{item.kodeRekening}</TableCell>
                 <TableCell>
+                  {item.tanggal.toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </TableCell>
+                <TableCell>
                   <Badge variant={item.jenisSpj === "GU" ? "default" : "secondary"}>
                     {item.jenisSpj}
                   </Badge>
@@ -74,13 +81,6 @@ export const SpjTable = ({
                 <TableCell>{item.uraian}</TableCell>
                 <TableCell className="text-right">
                   {`Rp ${item.jumlah.toLocaleString("id-ID")}`}
-                </TableCell>
-                <TableCell>
-                  {item.tanggal.toLocaleDateString("id-ID", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
                 </TableCell>
                 <TableCell>
                   {item.fileUrl ? (
