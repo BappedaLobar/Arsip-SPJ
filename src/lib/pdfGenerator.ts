@@ -6,11 +6,16 @@ import { kopBappedaBase64 } from "./kopBappeda";
 export const exportToPdf = (data: SPJ[]) => {
   const doc = new jsPDF();
 
-  // Tambahkan gambar kop surat
-  const imgWidth = 180;
-  const imgHeight = 30;
-  const x = (doc.internal.pageSize.getWidth() - imgWidth) / 2;
-  doc.addImage(kopBappedaBase64, "PNG", x, 10, imgWidth, imgHeight);
+  // Hapus header dari data base64 untuk memastikan kompatibilitas
+  const base64Image = kopBappedaBase64.split(';base64,').pop();
+
+  if (base64Image) {
+    // Tambahkan gambar kop surat
+    const imgWidth = 180;
+    const imgHeight = 30;
+    const x = (doc.internal.pageSize.getWidth() - imgWidth) / 2;
+    doc.addImage(base64Image, "PNG", x, 10, imgWidth, imgHeight);
+  }
 
   // Tambahkan judul setelah kop surat
   doc.setFontSize(14);
