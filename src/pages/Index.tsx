@@ -43,6 +43,11 @@ const Index = () => {
             <p className="text-muted-foreground">
               BAPPEDA KAB. LOMBOK BARAT
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Nyoman Asti Primasantia
+              <br />
+              200103012025052003
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
