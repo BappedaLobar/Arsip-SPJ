@@ -51,7 +51,7 @@ export const DownloadOptionsDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-lg"> {/* Diubah dari sm:max-w-[425px] menjadi sm:max-w-lg */}
         <DialogHeader>
           <DialogTitle>Pilih Opsi Unduh Arsip</DialogTitle>
         </DialogHeader>
@@ -107,7 +107,7 @@ export const DownloadOptionsDialog = ({
           <Button
             type="button"
             onClick={handleDownloadByYear}
-            disabled={downloadYear === "all" && downloadMonth !== "all"} // Disable if "All Years" is selected but a specific month is chosen, as "Unduh per Tahun" would then be ambiguous.
+            disabled={downloadYear === "all" && downloadMonth !== "all"}
           >
             <DownloadCloud className="mr-2 h-4 w-4" />
             Unduh per Tahun
@@ -115,7 +115,7 @@ export const DownloadOptionsDialog = ({
           <Button
             type="button"
             onClick={handleDownloadByMonth}
-            disabled={downloadYear === "all" || downloadMonth === "all"} // Requires specific year AND month
+            disabled={downloadYear === "all" || downloadMonth === "all"}
           >
             <DownloadCloud className="mr-2 h-4 w-4" />
             Unduh per Bulan
