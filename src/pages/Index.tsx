@@ -8,12 +8,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -23,9 +17,8 @@ import {
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ, bidangOptions } from "@/types/spj";
-import { exportToPdf } from "@/lib/pdfGenerator";
 import { exportToExcel } from "@/lib/excelGenerator";
-import { FileDown, PlusCircle, FolderArchive, FileQuestion, X, FileType, FileSpreadsheet } from "lucide-react";
+import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -73,15 +66,15 @@ const Index = () => {
         const startDate = new Date(yearInt, monthInt, 1);
         const endDate = new Date(yearInt, monthInt + 1, 0);
         query = query
-          .gte("tanggal", startDate.toISOString())
-          .lte("tanggal", endDate.toISOString());
+          .gte("tanggal", startDate.toISOString().split("T")[0])
+          .lte("tanggal", endDate.toISOString().split("T")[0]);
       } else {
         // Filter by year only
         const startDate = new Date(yearInt, 0, 1);
         const endDate = new Date(yearInt, 11, 31);
         query = query
-          .gte("tanggal", startDate.toISOString())
-          .lte("tanggal", endDate.toISOString());
+          .gte("tanggal", startDate.toISOString().split("T")[0])
+          .lte("tanggal", endDate.toISOString().split("T")[0]);
       }
     }
 
@@ -309,6 +302,13 @@ const Index = () => {
     setSelectedBidang("all");
   };
 
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    if (year === "all") {
+      setSelectedMonth("all");
+    }
+  };
+
   const { url: viewerUrl, type: viewerType } = getViewerInfo(selectedFileUrl);
 
   return (
@@ -331,24 +331,14 @@ const Index = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={spjData.length === 0}>
-                <FileDown className="mr-2 h-4 w-4" />
-                Cetak Laporan
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => exportToPdf(spjData)}>
-                <FileType className="mr-2 h-4 w-4" />
-                <span>PDF</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportToExcel(spjData)}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                <span>Excel</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="outline"
+            disabled={spjData.length === 0}
+            onClick={() => exportToExcel(spjData)}
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Cetak Laporan
+          </Button>
           <Dialog open={isFormOpen} onOpenChange={handleFormDialogChange}>
             <DialogTrigger asChild>
               <Button>
@@ -373,7 +363,7 @@ const Index = () => {
       </div>
 
       <div className="flex items-center gap-2 mb-4">
-        <Select value={selectedYear} onValueChange={setSelectedYear}>
+        <Select value={selectedYear} onValueChange={handleYearChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Pilih Tahun" />
           </SelectTrigger>
@@ -386,7 +376,11 @@ const Index = () => {
             ))}
           </SelectContent>
         </Select>
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+        <Select
+          value={selectedMonth}
+          onValueChange={setSelectedMonth}
+          disabled={selectedYear === "all"}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Pilih Bulan" />
           </SelectTrigger>
