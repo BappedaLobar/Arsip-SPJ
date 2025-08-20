@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
-import { SPJ } from "@/types/spj";
+import { SPJ, bidangOptions } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
 import { exportToExcel } from "@/lib/excelGenerator";
 import { FileDown, PlusCircle, FolderArchive, FileQuestion, X, FileType, FileSpreadsheet } from "lucide-react";
@@ -43,6 +43,7 @@ const Index = () => {
   const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedBidang, setSelectedBidang] = useState<string>("all");
 
   const years = ["2023", "2024", "2025", "2026"];
   const months = [
@@ -60,7 +61,7 @@ const Index = () => {
     { value: "12", label: "Desember" },
   ];
 
-  const fetchSpjData = async (year: string, month: string) => {
+  const fetchSpjData = async (year: string, month: string, bidang: string) => {
     setIsLoading(true);
     let query = supabase.from("spj").select("*");
 
@@ -82,6 +83,10 @@ const Index = () => {
           .gte("tanggal", startDate.toISOString())
           .lte("tanggal", endDate.toISOString());
       }
+    }
+
+    if (bidang !== "all") {
+      query = query.eq("bidang", bidang);
     }
 
     const { data, error } = await query.order("tanggal", { ascending: false });
@@ -106,8 +111,8 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetchSpjData(selectedYear, selectedMonth);
-  }, [selectedYear, selectedMonth]);
+    fetchSpjData(selectedYear, selectedMonth, selectedBidang);
+  }, [selectedYear, selectedMonth, selectedBidang]);
 
   const handleSaveSpj = async (
     data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }
@@ -189,7 +194,7 @@ const Index = () => {
     dismissToast(toastId);
     setIsFormOpen(false);
     setEditingSpj(null);
-    fetchSpjData(selectedYear, selectedMonth);
+    fetchSpjData(selectedYear, selectedMonth, selectedBidang);
   };
 
   const handleDeleteSpj = async (id: string) => {
@@ -217,7 +222,7 @@ const Index = () => {
 
     dismissToast(toastId);
     showSuccess("Data berhasil dihapus!");
-    fetchSpjData(selectedYear, selectedMonth);
+    fetchSpjData(selectedYear, selectedMonth, selectedBidang);
   };
 
   const handleEdit = (spj: SPJ) => {
@@ -301,6 +306,7 @@ const Index = () => {
   const resetFilters = () => {
     setSelectedYear("all");
     setSelectedMonth("all");
+    setSelectedBidang("all");
   };
 
   const { url: viewerUrl, type: viewerType } = getViewerInfo(selectedFileUrl);
@@ -393,7 +399,20 @@ const Index = () => {
             ))}
           </SelectContent>
         </Select>
-        {(selectedYear !== "all" || selectedMonth !== "all") && (
+        <Select value={selectedBidang} onValueChange={setSelectedBidang}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Pilih Bidang" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Bidang</SelectItem>
+            {bidangOptions.map((bidang) => (
+              <SelectItem key={bidang} value={bidang}>
+                {bidang}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(selectedYear !== "all" || selectedMonth !== "all" || selectedBidang !== "all") && (
           <Button variant="ghost" onClick={resetFilters}>
             <X className="mr-2 h-4 w-4" />
             Reset Filter
