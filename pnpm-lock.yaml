@@ -98,6 +98,12 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.56.2
         version: 5.74.4(react@18.3.1)
+      '@types/gapi':
+        specifier: ^0.0.47
+        version: 0.0.47
+      '@types/google.picker':
+        specifier: ^0.0.51
+        version: 0.0.51
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1372,6 +1378,12 @@ packages:
 
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
+
+  '@types/gapi@0.0.47':
+    resolution: {integrity: sha512-/ZsLuq6BffMgbKMtZyDZ8vwQvTyKhKQ1G2K6VyWCgtHHhfSSXbk4+4JwImZiTjWNXfI2q1ZStAwFFHSkNoTkHA==}
+
+  '@types/google.picker@0.0.51':
+    resolution: {integrity: sha512-z6o2J4PQTcXvlW1rtgQx65d5uEF+rMI1hzrnazKQxBONdEuYAr4AeOSH2KZy12WHPmqMX+aWYyfcZ0uktBBhhA==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -3678,6 +3690,10 @@ snapshots:
   '@types/d3-timer@3.0.2': {}
 
   '@types/estree@1.0.7': {}
+
+  '@types/gapi@0.0.47': {}
+
+  '@types/google.picker@0.0.51': {}
 
   '@types/json-schema@7.0.15': {}
 
