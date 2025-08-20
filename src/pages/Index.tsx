@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,38 +13,142 @@ import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { FileDown, PlusCircle, FolderArchive } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  showError,
+  showSuccess,
+  showLoading,
+  dismissToast,
+} from "@/utils/toast";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSpj, setEditingSpj] = useState<SPJ | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSaveSpj = (data: Omit<SPJ, "id">) => {
-    if (editingSpj) {
-      // Update existing SPJ
-      const updatedSpj: SPJ = { id: editingSpj.id, ...data };
-      setSpjData((prev) =>
-        prev.map((item) => (item.id === editingSpj.id ? updatedSpj : item))
-      );
+  const fetchSpjData = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("spj")
+      .select("*")
+      .order("tanggal", { ascending: false });
+
+    if (error) {
+      showError("Gagal memuat data: " + error.message);
     } else {
-      // Add new SPJ
-      const newSpj: SPJ = {
-        id: new Date().toISOString(),
-        ...data,
-      };
-      setSpjData((prev) => [...prev, newSpj]);
+      const formattedData = data.map((item: any) => ({
+        id: item.id,
+        nomorPembukuan: item.nomor_pembukuan,
+        kodeRekening: item.kode_rekening,
+        jenisSpj: item.jenis_spj,
+        tanggal: new Date(item.tanggal),
+        uraian: item.uraian,
+        jumlah: item.jumlah,
+        fileUrl: item.file_url,
+      }));
+      setSpjData(formattedData);
     }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchSpjData();
+  }, []);
+
+  const handleSaveSpj = async (
+    data: Omit<SPJ, "id" | "fileUrl"> & { file?: File }
+  ) => {
+    const toastId = showLoading("Menyimpan data...");
+    let fileUrl: string | null = editingSpj?.fileUrl || null;
+
+    if (data.file) {
+      const file = data.file;
+      const fileName = `${new Date().toISOString()}_${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("spj_files")
+        .upload(fileName, file);
+
+      if (uploadError) {
+        dismissToast(toastId);
+        showError("Gagal mengunggah file: " + uploadError.message);
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("spj_files")
+        .getPublicUrl(uploadData.path);
+      fileUrl = publicUrlData.publicUrl;
+    }
+
+    const spjRecord = {
+      nomor_pembukuan: data.nomorPembukuan,
+      kode_rekening: data.kodeRekening,
+      jenis_spj: data.jenisSpj,
+      tanggal: data.tanggal.toISOString().split("T")[0],
+      uraian: data.uraian,
+      jumlah: data.jumlah,
+      file_url: fileUrl,
+    };
+
+    if (editingSpj) {
+      const { error } = await supabase
+        .from("spj")
+        .update(spjRecord)
+        .eq("id", editingSpj.id);
+      if (error) {
+        dismissToast(toastId);
+        showError("Gagal memperbarui data: " + error.message);
+        return;
+      }
+      showSuccess("Data berhasil diperbarui!");
+    } else {
+      const { error } = await supabase.from("spj").insert([spjRecord]);
+      if (error) {
+        dismissToast(toastId);
+        showError("Gagal menyimpan data: " + error.message);
+        return;
+      }
+      showSuccess("Data berhasil disimpan!");
+    }
+
+    dismissToast(toastId);
     setIsFormOpen(false);
     setEditingSpj(null);
+    fetchSpjData();
+  };
+
+  const handleDeleteSpj = async (id: string) => {
+    const spjToDelete = spjData.find((item) => item.id === id);
+    if (!spjToDelete) return;
+
+    if (!window.confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
+
+    const toastId = showLoading("Menghapus data...");
+
+    if (spjToDelete.fileUrl) {
+      const fileName = spjToDelete.fileUrl.split("/").pop();
+      if (fileName) {
+        await supabase.storage.from("spj_files").remove([fileName]);
+      }
+    }
+
+    const { error } = await supabase.from("spj").delete().eq("id", id);
+
+    if (error) {
+      dismissToast(toastId);
+      showError("Gagal menghapus data: " + error.message);
+      return;
+    }
+
+    dismissToast(toastId);
+    showSuccess("Data berhasil dihapus!");
+    fetchSpjData();
   };
 
   const handleEdit = (spj: SPJ) => {
     setEditingSpj(spj);
     setIsFormOpen(true);
-  };
-
-  const handleDeleteSpj = (id: string) => {
-    setSpjData((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleDialogChange = (open: boolean) => {
@@ -109,6 +213,7 @@ const Index = () => {
         data={spjData}
         onEdit={handleEdit}
         onDelete={handleDeleteSpj}
+        isLoading={isLoading}
       />
       <MadeWithDyad />
     </div>

@@ -51,7 +51,7 @@ const formSchema = z.object({
 });
 
 type SpjFormProps = {
-  onSubmit: (data: Omit<SPJ, "id">) => void;
+  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File }) => void;
   onCancel: () => void;
   initialData?: SPJ | null;
 };
@@ -59,7 +59,7 @@ type SpjFormProps = {
 export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
+    defaultValues: {
       nomorPembukuan: "",
       kodeRekening: "",
       uraian: "",
@@ -71,7 +71,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     if (initialData) {
       form.reset({
         ...initialData,
-        file: undefined, // File input cannot be programmatically set for security reasons
+        file: undefined,
       });
     } else {
       form.reset({
@@ -95,7 +95,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
       tanggal: values.tanggal,
       uraian: values.uraian,
       jumlah: values.jumlah,
-      file: file || initialData?.file, // Keep existing file if a new one isn't uploaded
+      file: file,
     });
   };
 
@@ -225,7 +225,11 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                 Terbilang (Rp)
               </FormLabel>
               <FormControl>
-                <Input type="number" placeholder="Masukkan jumlah dalam angka" {...field} />
+                <Input
+                  type="number"
+                  placeholder="Masukkan jumlah dalam angka"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -241,7 +245,11 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                 Upload File (PDF/JPG/PNG)
               </FormLabel>
               <FormControl>
-                <Input type="file" accept=".pdf,.jpg,.jpeg,.png" {...form.register("file")} />
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  {...form.register("file")}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -13,16 +13,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Link as LinkIcon } from "lucide-react";
 import { SPJ } from "@/types/spj";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SpjTableProps = {
   data: SPJ[];
   onDelete: (id: string) => void;
   onEdit: (spj: SPJ) => void;
+  isLoading: boolean;
 };
 
-export const SpjTable = ({ data, onDelete, onEdit }: SpjTableProps) => {
+export const SpjTable = ({
+  data,
+  onDelete,
+  onEdit,
+  isLoading,
+}: SpjTableProps) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -41,20 +48,45 @@ export const SpjTable = ({ data, onDelete, onEdit }: SpjTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.length > 0 ? (
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell colSpan={8}>
+                  <Skeleton className="h-8 w-full" />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : data.length > 0 ? (
             data.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.nomorPembukuan}</TableCell>
+                <TableCell className="font-medium">
+                  {item.nomorPembukuan}
+                </TableCell>
                 <TableCell>{item.kodeRekening}</TableCell>
                 <TableCell>{item.jenisSpj}</TableCell>
                 <TableCell>
-                  {item.tanggal.toLocaleDateString("id-ID")}
+                  {item.tanggal.toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </TableCell>
                 <TableCell>{item.uraian}</TableCell>
                 <TableCell className="text-right">
                   {`Rp ${item.jumlah.toLocaleString("id-ID")}`}
                 </TableCell>
-                <TableCell>{item.file?.name || "Tidak ada file"}</TableCell>
+                <TableCell>
+                  {item.fileUrl ? (
+                    <Button asChild variant="link" className="p-0 h-auto">
+                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <LinkIcon className="mr-2 h-4 w-4" />
+                        Lihat File
+                      </a>
+                    </Button>
+                  ) : (
+                    "Tidak ada file"
+                  )}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -83,7 +115,7 @@ export const SpjTable = ({ data, onDelete, onEdit }: SpjTableProps) => {
           ) : (
             <TableRow>
               <TableCell colSpan={8} className="h-24 text-center">
-                Belum ada data.
+                Belum ada data. Silakan tambahkan arsip baru.
               </TableCell>
             </TableRow>
           )}

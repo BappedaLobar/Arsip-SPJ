@@ -6,5 +6,5 @@ export type SPJ = {
   tanggal: Date;
   uraian: string;
   jumlah: number;
-  file?: File;
+  fileUrl?: string | null;
 };
