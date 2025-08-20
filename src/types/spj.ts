@@ -1,6 +1,6 @@
 export type SPJ = {
   id: string;
-  nomorSpj: string;
+  nomorPembukuan: string;
   kodeRekening: string;
   jenisSpj: "GU" | "LS";
   tanggal: Date;

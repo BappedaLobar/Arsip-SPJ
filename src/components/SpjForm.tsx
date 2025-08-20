@@ -41,7 +41,7 @@ import { format } from "date-fns";
 import { SPJ } from "@/types/spj";
 
 const formSchema = z.object({
-  nomorSpj: z.string().min(1, "Nomor SPJ harus diisi"),
+  nomorPembukuan: z.string().min(1, "No. Pembukuan harus diisi"),
   kodeRekening: z.string().min(1, "Kode Rekening harus diisi"),
   jenisSpj: z.enum(["GU", "LS"], { required_error: "Jenis SPJ harus dipilih" }),
   tanggal: z.date({ required_error: "Tanggal harus diisi" }),
@@ -60,7 +60,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
-      nomorSpj: "",
+      nomorPembukuan: "",
       kodeRekening: "",
       uraian: "",
       jumlah: 0,
@@ -75,7 +75,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
       });
     } else {
       form.reset({
-        nomorSpj: "",
+        nomorPembukuan: "",
         kodeRekening: "",
         uraian: "",
         jumlah: 0,
@@ -89,7 +89,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
     const file = values.file?.[0];
     onSubmit({
-      nomorSpj: values.nomorSpj,
+      nomorPembukuan: values.nomorPembukuan,
       kodeRekening: values.kodeRekening,
       jenisSpj: values.jenisSpj,
       tanggal: values.tanggal,
@@ -104,15 +104,15 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="nomorSpj"
+          name="nomorPembukuan"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="flex items-center">
                 <FileText className="mr-2 h-4 w-4 text-primary" />
-                Nomor SPJ
+                No. Pembukuan
               </FormLabel>
               <FormControl>
-                <Input placeholder="Masukkan nomor SPJ" {...field} />
+                <Input placeholder="Masukkan No. Pembukuan" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -222,10 +222,10 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
             <FormItem>
               <FormLabel className="flex items-center">
                 <CircleDollarSign className="mr-2 h-4 w-4 text-yellow-500" />
-                Jumlah (Rp)
+                Terbilang (Rp)
               </FormLabel>
               <FormControl>
-                <Input type="number" placeholder="Masukkan jumlah" {...field} />
+                <Input type="number" placeholder="Masukkan jumlah dalam angka" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

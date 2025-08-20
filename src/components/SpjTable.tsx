@@ -28,12 +28,12 @@ export const SpjTable = ({ data, onDelete, onEdit }: SpjTableProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>No. SPJ</TableHead>
+            <TableHead>No. Pembukuan</TableHead>
             <TableHead>Kode Rekening</TableHead>
             <TableHead>Jenis</TableHead>
             <TableHead>Tanggal</TableHead>
             <TableHead>Uraian</TableHead>
-            <TableHead className="text-right">Jumlah</TableHead>
+            <TableHead className="text-right">Terbilang (Rp)</TableHead>
             <TableHead>File</TableHead>
             <TableHead>
               <span className="sr-only">Aksi</span>
@@ -44,7 +44,7 @@ export const SpjTable = ({ data, onDelete, onEdit }: SpjTableProps) => {
           {data.length > 0 ? (
             data.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.nomorSpj}</TableCell>
+                <TableCell className="font-medium">{item.nomorPembukuan}</TableCell>
                 <TableCell>{item.kodeRekening}</TableCell>
                 <TableCell>{item.jenisSpj}</TableCell>
                 <TableCell>
