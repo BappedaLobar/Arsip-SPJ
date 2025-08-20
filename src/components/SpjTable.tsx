@@ -13,15 +13,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { SPJ } from "@/types/spj";
 
 type SpjTableProps = {
   data: SPJ[];
   onDelete: (id: string) => void;
+  onEdit: (spj: SPJ) => void;
 };
 
-export const SpjTable = ({ data, onDelete }: SpjTableProps) => {
+export const SpjTable = ({ data, onDelete, onEdit }: SpjTableProps) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -61,6 +62,10 @@ export const SpjTable = ({ data, onDelete }: SpjTableProps) => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEdit(item)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>Edit</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onDelete(item.id)}
                         className="text-red-600"

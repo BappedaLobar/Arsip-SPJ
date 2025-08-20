@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -50,17 +51,36 @@ const formSchema = z.object({
 type SpjFormProps = {
   onSubmit: (data: Omit<SPJ, "id">) => void;
   onCancel: () => void;
+  initialData?: SPJ | null;
 };
 
-export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
+export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       nomorSpj: "",
       uraian: "",
       jumlah: 0,
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        ...initialData,
+        file: undefined, // File input cannot be programmatically set for security reasons
+      });
+    } else {
+      form.reset({
+        nomorSpj: "",
+        uraian: "",
+        jumlah: 0,
+        jenisSpj: undefined,
+        tanggal: undefined,
+        file: undefined,
+      });
+    }
+  }, [initialData, form]);
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
     const file = values.file?.[0];
@@ -70,7 +90,7 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
       tanggal: values.tanggal,
       uraian: values.uraian,
       jumlah: values.jumlah,
-      file,
+      file: file || initialData?.file, // Keep existing file if a new one isn't uploaded
     });
   };
 
@@ -102,7 +122,7 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
                 <Tags className="mr-2 h-4 w-4 text-primary" />
                 Jenis SPJ
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih jenis SPJ" />

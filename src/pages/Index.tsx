@@ -17,18 +17,41 @@ import { FileDown, PlusCircle, FolderArchive } from "lucide-react";
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingSpj, setEditingSpj] = useState<SPJ | null>(null);
 
-  const handleAddSpj = (data: Omit<SPJ, "id">) => {
-    const newSpj: SPJ = {
-      id: new Date().toISOString(),
-      ...data,
-    };
-    setSpjData((prev) => [...prev, newSpj]);
+  const handleSaveSpj = (data: Omit<SPJ, "id">) => {
+    if (editingSpj) {
+      // Update existing SPJ
+      const updatedSpj: SPJ = { id: editingSpj.id, ...data };
+      setSpjData((prev) =>
+        prev.map((item) => (item.id === editingSpj.id ? updatedSpj : item))
+      );
+    } else {
+      // Add new SPJ
+      const newSpj: SPJ = {
+        id: new Date().toISOString(),
+        ...data,
+      };
+      setSpjData((prev) => [...prev, newSpj]);
+    }
     setIsFormOpen(false);
+    setEditingSpj(null);
+  };
+
+  const handleEdit = (spj: SPJ) => {
+    setEditingSpj(spj);
+    setIsFormOpen(true);
   };
 
   const handleDeleteSpj = (id: string) => {
     setSpjData((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleDialogChange = (open: boolean) => {
+    setIsFormOpen(open);
+    if (!open) {
+      setEditingSpj(null);
+    }
   };
 
   return (
@@ -59,7 +82,7 @@ const Index = () => {
             <FileDown className="mr-2 h-4 w-4" />
             Cetak Laporan (PDF)
           </Button>
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <Dialog open={isFormOpen} onOpenChange={handleDialogChange}>
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -68,18 +91,25 @@ const Index = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Tambah Arsip SPJ Baru</DialogTitle>
+                <DialogTitle>
+                  {editingSpj ? "Edit Arsip SPJ" : "Tambah Arsip SPJ Baru"}
+                </DialogTitle>
               </DialogHeader>
               <SpjForm
-                onSubmit={handleAddSpj}
-                onCancel={() => setIsFormOpen(false)}
+                onSubmit={handleSaveSpj}
+                onCancel={() => handleDialogChange(false)}
+                initialData={editingSpj}
               />
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      <SpjTable data={spjData} onDelete={handleDeleteSpj} />
+      <SpjTable
+        data={spjData}
+        onEdit={handleEdit}
+        onDelete={handleDeleteSpj}
+      />
       <MadeWithDyad />
     </div>
   );
