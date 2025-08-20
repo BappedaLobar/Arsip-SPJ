@@ -8,10 +8,13 @@ export const exportToPdf = (data: SPJ[]) => {
   doc.text("Laporan Arsip SPJ", 14, 16);
   autoTable(doc, {
     startY: 20,
-    head: [["No", "Nomor SPJ", "Jenis", "Tanggal", "Uraian", "Jumlah"]],
+    head: [
+      ["No", "Nomor SPJ", "Kode Rekening", "Jenis", "Tanggal", "Uraian", "Jumlah"],
+    ],
     body: data.map((item, index) => [
       index + 1,
       item.nomorSpj,
+      item.kodeRekening,
       item.jenisSpj,
       item.tanggal.toLocaleDateString("id-ID"),
       item.uraian,

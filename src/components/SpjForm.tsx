@@ -31,6 +31,7 @@ import {
   CalendarIcon,
   CircleDollarSign,
   FileText,
+  Hash,
   MessageSquare,
   Save,
   Tags,
@@ -41,6 +42,7 @@ import { SPJ } from "@/types/spj";
 
 const formSchema = z.object({
   nomorSpj: z.string().min(1, "Nomor SPJ harus diisi"),
+  kodeRekening: z.string().min(1, "Kode Rekening harus diisi"),
   jenisSpj: z.enum(["GU", "LS"], { required_error: "Jenis SPJ harus dipilih" }),
   tanggal: z.date({ required_error: "Tanggal harus diisi" }),
   uraian: z.string().min(1, "Uraian harus diisi"),
@@ -59,6 +61,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       nomorSpj: "",
+      kodeRekening: "",
       uraian: "",
       jumlah: 0,
     },
@@ -73,6 +76,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     } else {
       form.reset({
         nomorSpj: "",
+        kodeRekening: "",
         uraian: "",
         jumlah: 0,
         jenisSpj: undefined,
@@ -86,6 +90,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     const file = values.file?.[0];
     onSubmit({
       nomorSpj: values.nomorSpj,
+      kodeRekening: values.kodeRekening,
       jenisSpj: values.jenisSpj,
       tanggal: values.tanggal,
       uraian: values.uraian,
@@ -108,6 +113,22 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
               </FormLabel>
               <FormControl>
                 <Input placeholder="Masukkan nomor SPJ" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="kodeRekening"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center">
+                <Hash className="mr-2 h-4 w-4 text-primary" />
+                Kode Rekening
+              </FormLabel>
+              <FormControl>
+                <Input placeholder="Masukkan kode rekening" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
