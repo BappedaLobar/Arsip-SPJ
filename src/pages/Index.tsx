@@ -235,7 +235,7 @@ const Index = () => {
 
     switch (extension) {
       case 'pdf':
-        return { url: url, type: 'iframe' };
+        return { url: `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`, type: 'iframe' };
       case 'jpg':
       case 'jpeg':
       case 'png':
