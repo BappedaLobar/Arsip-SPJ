@@ -139,7 +139,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     };
 
     const createPicker = (accessToken: string) => {
-      const view = new google.picker.View(google.picker.ViewId.DOCS);
+      const view = new google.picker.DocsView();
       view.setMimeTypes("application/pdf,image/png,image/jpeg");
       const picker = new google.picker.PickerBuilder()
         .setAppId(CLIENT_ID.split('-')[0])
