@@ -40,6 +40,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import { SPJ, bidangOptions } from "@/types/spj";
 import { gapi } from "gapi-script";
 
@@ -277,7 +278,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "PPP")
+                        format(field.value, "PPP", { locale: id })
                       ) : (
                         <span>Pilih tanggal</span>
                       )}
@@ -291,6 +292,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                     selected={field.value}
                     onSelect={field.onChange}
                     initialFocus
+                    locale={id}
                   />
                 </PopoverContent>
               </Popover>

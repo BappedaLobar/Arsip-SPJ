@@ -26,6 +26,7 @@ import {
   showLoading,
   dismissToast,
 } from "@/utils/toast";
+import { format } from "date-fns";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -157,7 +158,7 @@ const Index = () => {
       kode_rekening: data.kodeRekening,
       jenis_spj: data.jenisSpj,
       bidang: data.bidang,
-      tanggal: data.tanggal.toISOString().split("T")[0],
+      tanggal: format(data.tanggal, "yyyy-MM-dd"),
       uraian: data.uraian,
       jumlah: data.jumlah,
       file_url: fileUrl,
