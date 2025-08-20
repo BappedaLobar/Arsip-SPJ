@@ -59,26 +59,17 @@ const Index = () => {
     setIsLoading(true);
     let query = supabase.from("spj").select("*");
 
+    // Apply year filter if a specific year is selected
     if (year !== "all") {
       const yearInt = parseInt(year);
-      if (month !== "all") {
-        // Filter by specific month and year, using UTC to avoid timezone issues
-        const monthInt = parseInt(month) - 1; // JS months are 0-indexed
-        const startDate = new Date(Date.UTC(yearInt, monthInt, 1));
-        const endDate = new Date(Date.UTC(yearInt, monthInt + 1, 0));
-        query = query
-          .gte("tanggal", startDate.toISOString().split("T")[0])
-          .lte("tanggal", endDate.toISOString().split("T")[0]);
-      } else {
-        // Filter by year only, using UTC
-        const startDate = new Date(Date.UTC(yearInt, 0, 1));
-        const endDate = new Date(Date.UTC(yearInt, 11, 31));
-        query = query
-          .gte("tanggal", startDate.toISOString().split("T")[0])
-          .lte("tanggal", endDate.toISOString().split("T")[0]);
-      }
+      const startDate = new Date(Date.UTC(yearInt, 0, 1));
+      const endDate = new Date(Date.UTC(yearInt, 11, 31, 23, 59, 59, 999)); // End of the year
+      query = query
+        .gte("tanggal", startDate.toISOString().split("T")[0])
+        .lte("tanggal", endDate.toISOString().split("T")[0]);
     }
 
+    // Apply bidang filter
     if (bidang !== "all") {
       query = query.eq("bidang", bidang);
     }
@@ -88,11 +79,8 @@ const Index = () => {
     if (error) {
       showError("Gagal memuat data: " + error.message);
     } else {
-      const formattedData = data.map((item: any) => {
+      let formattedData = data.map((item: any) => {
         // Correctly parse the date string to avoid timezone issues.
-        // item.tanggal from Supabase is a string like "2024-07-20".
-        // new Date("2024-07-20") can shift the day depending on the user's timezone.
-        // This method creates the date in the user's local timezone.
         const dateParts = item.tanggal.split('-').map(Number);
         const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
 
@@ -108,6 +96,13 @@ const Index = () => {
           fileUrl: item.file_url,
         };
       });
+
+      // Apply month filter client-side if a specific month is selected
+      if (month !== "all") {
+        const monthInt = parseInt(month) - 1; // JS months are 0-indexed
+        formattedData = formattedData.filter(item => item.tanggal.getMonth() === monthInt);
+      }
+
       setSpjData(formattedData);
     }
     setIsLoading(false);
@@ -314,9 +309,7 @@ const Index = () => {
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    if (year === "all") {
-      setSelectedMonth("all");
-    }
+    // No need to reset month here, as month filter will now work independently
   };
 
   const { url: viewerUrl, type: viewerType } = getViewerInfo(selectedFileUrl);
