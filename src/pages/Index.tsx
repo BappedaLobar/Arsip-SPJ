@@ -7,11 +7,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
-import { FileDown, PlusCircle, FolderArchive, FileQuestion } from "lucide-react";
+import { FileDown, PlusCircle, FolderArchive, FileQuestion, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -19,17 +26,6 @@ import {
   showLoading,
   dismissToast,
 } from "@/utils/toast";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import {
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfYear,
-} from "date-fns";
-
-type FilterType = "all" | "week" | "month" | "year";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -38,26 +34,47 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
-  const fetchSpjData = async (activeFilter: FilterType) => {
+  const years = ["2023", "2024", "2025", "2026"];
+  const months = [
+    { value: "1", label: "Januari" },
+    { value: "2", label: "Februari" },
+    { value: "3", label: "Maret" },
+    { value: "4", label: "April" },
+    { value: "5", label: "Mei" },
+    { value: "6", label: "Juni" },
+    { value: "7", label: "Juli" },
+    { value: "8", label: "Agustus" },
+    { value: "9", label: "September" },
+    { value: "10", label: "Oktober" },
+    { value: "11", label: "November" },
+    { value: "12", label: "Desember" },
+  ];
+
+  const fetchSpjData = async (year: string, month: string) => {
     setIsLoading(true);
     let query = supabase.from("spj").select("*");
 
-    const now = new Date();
-
-    if (activeFilter === "week") {
-      const start = startOfWeek(now).toISOString();
-      const end = endOfWeek(now).toISOString();
-      query = query.gte("tanggal", start).lte("tanggal", end);
-    } else if (activeFilter === "month") {
-      const start = startOfMonth(now).toISOString();
-      const end = endOfMonth(now).toISOString();
-      query = query.gte("tanggal", start).lte("tanggal", end);
-    } else if (activeFilter === "year") {
-      const start = startOfYear(now).toISOString();
-      const end = endOfYear(now).toISOString();
-      query = query.gte("tanggal", start).lte("tanggal", end);
+    if (year !== "all") {
+      const yearInt = parseInt(year);
+      if (month !== "all") {
+        // Filter by specific month and year
+        const monthInt = parseInt(month) - 1;
+        const startDate = new Date(yearInt, monthInt, 1);
+        const endDate = new Date(yearInt, monthInt + 1, 0);
+        query = query
+          .gte("tanggal", startDate.toISOString())
+          .lte("tanggal", endDate.toISOString());
+      } else {
+        // Filter by year only
+        const startDate = new Date(yearInt, 0, 1);
+        const endDate = new Date(yearInt, 11, 31);
+        query = query
+          .gte("tanggal", startDate.toISOString())
+          .lte("tanggal", endDate.toISOString());
+      }
     }
 
     const { data, error } = await query.order("tanggal", { ascending: false });
@@ -81,8 +98,8 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetchSpjData(filter);
-  }, [filter]);
+    fetchSpjData(selectedYear, selectedMonth);
+  }, [selectedYear, selectedMonth]);
 
   const handleSaveSpj = async (
     data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }
@@ -163,7 +180,7 @@ const Index = () => {
     dismissToast(toastId);
     setIsFormOpen(false);
     setEditingSpj(null);
-    fetchSpjData(filter);
+    fetchSpjData(selectedYear, selectedMonth);
   };
 
   const handleDeleteSpj = async (id: string) => {
@@ -191,7 +208,7 @@ const Index = () => {
 
     dismissToast(toastId);
     showSuccess("Data berhasil dihapus!");
-    fetchSpjData(filter);
+    fetchSpjData(selectedYear, selectedMonth);
   };
 
   const handleEdit = (spj: SPJ) => {
@@ -229,6 +246,11 @@ const Index = () => {
       default:
         return { url: '', unsupported: true };
     }
+  };
+
+  const resetFilters = () => {
+    setSelectedYear("all");
+    setSelectedMonth("all");
   };
 
   const { url: viewerUrl, unsupported } = getViewerUrl(selectedFileUrl);
@@ -284,20 +306,39 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="flex items-center mb-4">
-        <ToggleGroup
-          type="single"
-          value={filter}
-          onValueChange={(value: FilterType) => {
-            if (value) setFilter(value);
-          }}
-          defaultValue="all"
-        >
-          <ToggleGroupItem value="all">Semua</ToggleGroupItem>
-          <ToggleGroupItem value="year">Tahun Ini</ToggleGroupItem>
-          <ToggleGroupItem value="month">Bulan Ini</ToggleGroupItem>
-          <ToggleGroupItem value="week">Minggu Ini</ToggleGroupItem>
-        </ToggleGroup>
+      <div className="flex items-center gap-2 mb-4">
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Pilih Tahun" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Tahun</SelectItem>
+            {years.map((year) => (
+              <SelectItem key={year} value={year}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Pilih Bulan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Bulan</SelectItem>
+            {months.map((month) => (
+              <SelectItem key={month.value} value={month.value}>
+                {month.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(selectedYear !== "all" || selectedMonth !== "all") && (
+          <Button variant="ghost" onClick={resetFilters}>
+            <X className="mr-2 h-4 w-4" />
+            Reset Filter
+          </Button>
+        )}
       </div>
 
       <SpjTable
