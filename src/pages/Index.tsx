@@ -228,23 +228,29 @@ const Index = () => {
     setIsFileViewerOpen(true);
   };
 
-  const getViewerUrl = (url: string | null): { url: string; unsupported: boolean } => {
-    if (!url) return { url: "", unsupported: true };
-    const extension = url.split('.').pop()?.toLowerCase();
+  const getViewerInfo = (url: string | null): { url: string; type: 'iframe' | 'image' | 'unsupported' } => {
+    if (!url) return { url: "", type: 'unsupported' };
+    const extension = url.split('?')[0].split('.').pop()?.toLowerCase();
     const encodedUrl = encodeURIComponent(url);
 
     switch (extension) {
       case 'pdf':
-        return { url: url, unsupported: false };
+        return { url: url, type: 'iframe' };
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return { url: url, type: 'image' };
       case 'doc':
       case 'docx':
       case 'xls':
       case 'xlsx':
       case 'ppt':
       case 'pptx':
-        return { url: `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`, unsupported: false };
+        return { url: `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`, type: 'iframe' };
       default:
-        return { url: '', unsupported: true };
+        return { url: url, type: 'unsupported' };
     }
   };
 
@@ -253,7 +259,7 @@ const Index = () => {
     setSelectedMonth("all");
   };
 
-  const { url: viewerUrl, unsupported } = getViewerUrl(selectedFileUrl);
+  const { url: viewerUrl, type: viewerType } = getViewerInfo(selectedFileUrl);
 
   return (
     <div className="container mx-auto py-10 max-w-full px-4 sm:px-6 lg:px-8">
@@ -354,15 +360,19 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle>Pratinjau Berkas</DialogTitle>
           </DialogHeader>
-          <div className="flex-grow">
-            {unsupported ? (
-              <div className="flex flex-col items-center justify-center h-full border rounded-md bg-gray-50">
+          <div className="flex-grow bg-gray-100 dark:bg-gray-800 rounded-md">
+            {viewerType === 'unsupported' ? (
+              <div className="flex flex-col items-center justify-center h-full">
                 <FileQuestion className="w-12 h-12 text-destructive mb-4" />
                 <h3 className="text-lg font-medium text-gray-600">Format Tidak Didukung</h3>
                 <p className="text-sm text-gray-500">Pratinjau untuk jenis file ini tidak tersedia.</p>
-                <a href={selectedFileUrl || '#'} target="_blank" rel="noopener noreferrer" className="mt-4 text-sm text-primary hover:underline">
-                  Unduh file
+                <a href={viewerUrl || '#'} target="_blank" rel="noopener noreferrer" className="mt-4 text-sm text-primary hover:underline">
+                  Buka di tab baru atau unduh file
                 </a>
+              </div>
+            ) : viewerType === 'image' ? (
+              <div className="w-full h-full flex items-center justify-center p-4">
+                <img src={viewerUrl} alt="Pratinjau Berkas" className="max-w-full max-h-full object-contain rounded-md shadow-lg" />
               </div>
             ) : (
               <iframe
