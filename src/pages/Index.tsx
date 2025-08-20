@@ -389,7 +389,6 @@ const Index = () => {
         <Select
           value={selectedMonth}
           onValueChange={setSelectedMonth}
-          disabled={selectedYear === "all"}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Pilih Bulan" />
