@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,9 +36,11 @@ import {
   Save,
   Tags,
   UploadCloud,
+  Cloud,
 } from "lucide-react";
 import { format } from "date-fns";
 import { SPJ } from "@/types/spj";
+import { gapi } from "gapi-script";
 
 const formSchema = z.object({
   nomorPembukuan: z.string().min(1, "No. Pembukuan harus diisi"),
@@ -51,12 +53,13 @@ const formSchema = z.object({
 });
 
 type SpjFormProps = {
-  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File }) => void;
+  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string } }) => void;
   onCancel: () => void;
   initialData?: SPJ | null;
 };
 
 export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,6 +76,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
         ...initialData,
         file: undefined,
       });
+      setSelectedFileName(null);
     } else {
       form.reset({
         nomorPembukuan: "",
@@ -83,11 +87,12 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
         tanggal: undefined,
         file: undefined,
       });
+      setSelectedFileName(null);
     }
   }, [initialData, form]);
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const file = values.file?.[0];
+    const file = values.file?.[0] || values.file;
     onSubmit({
       nomorPembukuan: values.nomorPembukuan,
       kodeRekening: values.kodeRekening,
@@ -99,9 +104,73 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     });
   };
 
+  const handleGoogleDriveImport = () => {
+    const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+    const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
+
+    if (!API_KEY || !CLIENT_ID) {
+      alert("Konfigurasi Google Drive API tidak ditemukan.");
+      return;
+    }
+
+    const initializeGapi = () => {
+      gapi.client.init({
+        apiKey: API_KEY,
+        clientId: CLIENT_ID,
+        scope: SCOPES,
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+      }).then(() => {
+        showPicker();
+      });
+    };
+
+    const showPicker = () => {
+      const token = gapi.auth.getToken();
+      if (!token) {
+        gapi.auth.authorize({ client_id: CLIENT_ID, scope: SCOPES, immediate: false }, (authResult) => {
+          if (authResult && !authResult.error) {
+            createPicker(authResult.access_token);
+          }
+        });
+      } else {
+        createPicker(token.access_token);
+      }
+    };
+
+    const createPicker = (accessToken: string) => {
+      const view = new google.picker.View(google.picker.ViewId.DOCS);
+      view.setMimeTypes("application/pdf,image/png,image/jpeg");
+      const picker = new google.picker.PickerBuilder()
+        .setAppId(CLIENT_ID.split('-')[0])
+        .setOAuthToken(accessToken)
+        .addView(view)
+        .setDeveloperKey(API_KEY)
+        .setCallback(pickerCallback)
+        .build();
+      picker.setVisible(true);
+    };
+
+    const pickerCallback = (data: any) => {
+      if (data.action === google.picker.Action.PICKED) {
+        const doc = data.docs[0];
+        const fileData = {
+          name: doc.name,
+          url: `https://www.googleapis.com/drive/v3/files/${doc.id}?alt=media`,
+          token: gapi.auth.getToken().access_token,
+        };
+        form.setValue("file", fileData as any);
+        setSelectedFileName(doc.name);
+      }
+    };
+
+    gapi.load("client:picker", initializeGapi);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        {/* ... form fields lainnya tetap sama ... */}
         <FormField
           control={form.control}
           name="nomorPembukuan"
@@ -235,26 +304,35 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="file"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center">
-                <UploadCloud className="mr-2 h-4 w-4 text-primary" />
-                Upload File (PDF/JPG/PNG)
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  {...form.register("file")}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <FormItem>
+          <FormLabel className="flex items-center">
+            <UploadCloud className="mr-2 h-4 w-4 text-primary" />
+            Upload File (PDF/JPG/PNG)
+          </FormLabel>
+          <div className="flex gap-2">
+            <FormControl className="flex-grow">
+              <Input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                {...form.register("file")}
+                onChange={(e) => {
+                  form.register("file").onChange(e);
+                  setSelectedFileName(e.target.files?.[0]?.name || null);
+                }}
+              />
+            </FormControl>
+            <Button type="button" variant="outline" onClick={handleGoogleDriveImport}>
+              <Cloud className="mr-2 h-4 w-4" />
+              Drive
+            </Button>
+          </div>
+          {selectedFileName && (
+            <p className="text-sm text-muted-foreground mt-2">
+              File terpilih: {selectedFileName}
+            </p>
           )}
-        />
+          <FormMessage />
+        </FormItem>
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
             Batal

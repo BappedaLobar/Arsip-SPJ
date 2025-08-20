@@ -59,20 +59,40 @@ const Index = () => {
   }, []);
 
   const handleSaveSpj = async (
-    data: Omit<SPJ, "id" | "fileUrl"> & { file?: File }
+    data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }
   ) => {
     const toastId = showLoading("Menyimpan data...");
     let fileUrl: string | null = editingSpj?.fileUrl || null;
 
     if (data.file) {
-      const file = data.file;
-      const fileName = `${new Date().toISOString()}_${file.name}`;
+      let fileToUpload: File | Blob;
+      let fileName: string;
+
+      if (data.file instanceof File) {
+        fileToUpload = data.file;
+        fileName = `${new Date().toISOString()}_${data.file.name}`;
+      } else {
+        // Handle Google Drive file
+        const response = await fetch(data.file.url, {
+          headers: {
+            Authorization: `Bearer ${data.file.token}`,
+          },
+        });
+        if (!response.ok) {
+          dismissToast(toastId);
+          showError("Gagal mengunduh file dari Google Drive.");
+          return;
+        }
+        fileToUpload = await response.blob();
+        fileName = `${new Date().toISOString()}_${data.file.name}`;
+      }
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("spj_files")
-        .upload(fileName, file);
+        .upload(fileName, fileToUpload);
 
       if (uploadError) {
-        dismissToast(uploadError.message);
+        dismissToast(toastId);
         showError("Gagal mengunggah file: " + uploadError.message);
         return;
       }
