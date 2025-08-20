@@ -9,11 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
-import { FileViewer } from "@/components/FileViewer";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { FileDown, PlusCircle, FolderArchive } from "lucide-react";
+import { FileDown, PlusCircle, FolderArchive, FileQuestion } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -28,6 +27,7 @@ const Index = () => {
   const [editingSpj, setEditingSpj] = useState<SPJ | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
+  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
 
   const fetchSpjData = async () => {
     setIsLoading(true);
@@ -153,12 +153,39 @@ const Index = () => {
     setIsFormOpen(true);
   };
 
-  const handleDialogChange = (open: boolean) => {
+  const handleFormDialogChange = (open: boolean) => {
     setIsFormOpen(open);
     if (!open) {
       setEditingSpj(null);
     }
   };
+
+  const handleViewFile = (url: string) => {
+    setSelectedFileUrl(url);
+    setIsFileViewerOpen(true);
+  };
+
+  const getViewerUrl = (url: string | null): { url: string; unsupported: boolean } => {
+    if (!url) return { url: "", unsupported: true };
+    const extension = url.split('.').pop()?.toLowerCase();
+    const encodedUrl = encodeURIComponent(url);
+
+    switch (extension) {
+      case 'pdf':
+        return { url: url, unsupported: false };
+      case 'doc':
+      case 'docx':
+      case 'xls':
+      case 'xlsx':
+      case 'ppt':
+      case 'pptx':
+        return { url: `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`, unsupported: false };
+      default:
+        return { url: '', unsupported: true };
+    }
+  };
+
+  const { url: viewerUrl, unsupported } = getViewerUrl(selectedFileUrl);
 
   return (
     <div className="container mx-auto py-10 max-w-full px-4 sm:px-6 lg:px-8">
@@ -188,7 +215,7 @@ const Index = () => {
             <FileDown className="mr-2 h-4 w-4" />
             Cetak Laporan (PDF)
           </Button>
-          <Dialog open={isFormOpen} onOpenChange={handleDialogChange}>
+          <Dialog open={isFormOpen} onOpenChange={handleFormDialogChange}>
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -203,7 +230,7 @@ const Index = () => {
               </DialogHeader>
               <SpjForm
                 onSubmit={handleSaveSpj}
-                onCancel={() => handleDialogChange(false)}
+                onCancel={() => handleFormDialogChange(false)}
                 initialData={editingSpj}
               />
             </DialogContent>
@@ -211,20 +238,40 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-3/5 lg:w-2/3">
-          <SpjTable
-            data={spjData}
-            onEdit={handleEdit}
-            onDelete={handleDeleteSpj}
-            onViewFile={setSelectedFileUrl}
-            isLoading={isLoading}
-          />
-        </div>
-        <div className="md:w-2/5 lg:w-1/3 h-[70vh]">
-          <FileViewer fileUrl={selectedFileUrl} />
-        </div>
-      </div>
+      <SpjTable
+        data={spjData}
+        onEdit={handleEdit}
+        onDelete={handleDeleteSpj}
+        onViewFile={handleViewFile}
+        isLoading={isLoading}
+      />
+
+      <Dialog open={isFileViewerOpen} onOpenChange={setIsFileViewerOpen}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Pratinjau Berkas</DialogTitle>
+          </DialogHeader>
+          <div className="flex-grow">
+            {unsupported ? (
+              <div className="flex flex-col items-center justify-center h-full border rounded-md bg-gray-50">
+                <FileQuestion className="w-12 h-12 text-destructive mb-4" />
+                <h3 className="text-lg font-medium text-gray-600">Format Tidak Didukung</h3>
+                <p className="text-sm text-gray-500">Pratinjau untuk jenis file ini tidak tersedia.</p>
+                <a href={selectedFileUrl || '#'} target="_blank" rel="noopener noreferrer" className="mt-4 text-sm text-primary hover:underline">
+                  Unduh file
+                </a>
+              </div>
+            ) : (
+              <iframe
+                src={viewerUrl}
+                className="w-full h-full border-0"
+                title="File Viewer"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <MadeWithDyad />
     </div>
   );

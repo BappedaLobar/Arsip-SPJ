@@ -96,8 +96,8 @@ export const SpjTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                       <DropdownMenuItem>
-                        <a href={item.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
+                       <DropdownMenuItem asChild>
+                        <a href={item.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center w-full cursor-pointer">
                           <LinkIcon className="mr-2 h-4 w-4" />
                           <span>Lihat di Tab Baru</span>
                         </a>
