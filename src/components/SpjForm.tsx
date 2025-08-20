@@ -44,6 +44,12 @@ import { id } from "date-fns/locale";
 import { SPJ, bidangOptions } from "@/types/spj";
 import { gapi } from "gapi-script";
 
+// Define a simple interface for the Google API authorization result
+interface GoogleAuthResult {
+  access_token?: string;
+  error?: string;
+}
+
 const formSchema = z.object({
   nomorPembukuan: z.string().min(1, "No. Pembukuan harus diisi"),
   kodeRekening: z.string().min(1, "Kode Rekening harus diisi"),
@@ -56,7 +62,7 @@ const formSchema = z.object({
 });
 
 type SpjFormProps = {
-  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string } }) => void;
+  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }) => void;
   onCancel: () => void;
   initialData?: SPJ | null;
 };
@@ -115,45 +121,67 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 
     if (!API_KEY || !CLIENT_ID) {
-      alert("Konfigurasi Google Drive API tidak ditemukan.");
+      alert("Konfigurasi Google Drive API tidak ditemukan. Pastikan VITE_GOOGLE_API_KEY dan VITE_GOOGLE_CLIENT_ID diatur di file .env Anda.");
       return;
     }
 
-    const initializeGapi = () => {
-      gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        scope: SCOPES,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-      }).then(() => {
-        showPicker();
+    const initializeGapiAndShowPicker = () => {
+      gapi.load("client:auth2", () => { // Load auth2 here
+        (gapi as any).client.init({ // Use type assertion here
+          apiKey: API_KEY,
+          clientId: CLIENT_ID,
+          scope: SCOPES,
+          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+        }).then(() => {
+          showPicker();
+        }).catch(error => {
+          console.error("Error initializing Google API client for picker:", error);
+          alert("Gagal memuat Google API untuk Picker. Cek konsol untuk detail.");
+        });
       });
     };
 
-    const showPicker = () => {
-      const token = gapi.auth.getToken();
-      if (!token) {
-        gapi.auth.authorize({ client_id: CLIENT_ID, scope: SCOPES, immediate: false }, (authResult) => {
-          if (authResult && !authResult.error) {
-            createPicker(authResult.access_token);
-          }
-        });
-      } else {
-        createPicker(token.access_token);
-      }
-    };
+    const showPicker = async () => {
+      try {
+        const authInstance = (gapi as any).auth2.getAuthInstance(); // Use type assertion here
+        if (!authInstance) {
+          throw new Error("Google Auth2 instance not available for picker.");
+        }
 
-    const createPicker = (accessToken: string) => {
-      const view = new google.picker.DocsView();
-      view.setMimeTypes("application/pdf,image/png,image/jpeg");
-      const picker = new google.picker.PickerBuilder()
-        .setAppId(CLIENT_ID.split('-')[0])
-        .setOAuthToken(accessToken)
-        .addView(view)
-        .setDeveloperKey(API_KEY)
-        .setCallback(pickerCallback)
-        .build();
-      picker.setVisible(true);
+        let authResponse: GoogleAuthResult;
+
+        // Check if user is already signed in and has the required scope
+        if (authInstance.isSignedIn.get() && authInstance.currentUser.get().hasGrantedScopes(SCOPES)) {
+          authResponse = authInstance.currentUser.get().getAuthResponse(true); // Get fresh token
+        } else {
+          // If not signed in or scope not granted, prompt for sign-in
+          authResponse = await authInstance.signIn({ scope: SCOPES });
+        }
+
+        if (!authResponse || authResponse.error) {
+          throw new Error(authResponse?.error || "Authorization failed for picker.");
+        }
+
+        const accessToken = authResponse.access_token;
+        if (!accessToken) {
+          throw new Error("Access token tidak diperoleh untuk picker.");
+        }
+
+        const view = new google.picker.DocsView();
+        view.setMimeTypes("application/pdf,image/png,image/jpeg");
+        const picker = new google.picker.PickerBuilder()
+          .setAppId(CLIENT_ID.split('-')[0])
+          .setOAuthToken(accessToken)
+          .addView(view)
+          .setDeveloperKey(API_KEY)
+          .setCallback(pickerCallback)
+          .build();
+        picker.setVisible(true);
+
+      } catch (error) {
+        console.error("Error showing Google Picker:", error);
+        alert(`Gagal menampilkan Google Picker: ${error instanceof Error ? error.message : String(error)}`);
+      }
     };
 
     const pickerCallback = (data: any) => {
@@ -162,14 +190,14 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
         const fileData = {
           name: doc.name,
           url: `https://www.googleapis.com/drive/v3/files/${doc.id}?alt=media`,
-          token: gapi.auth.getToken().access_token,
+          token: (gapi as any).auth2.getAuthInstance().currentUser.get().getAuthResponse(true).access_token, // Use type assertion here
         };
         form.setValue("file", fileData as any);
         setSelectedFileName(doc.name);
       }
     };
 
-    gapi.load("client:picker", initializeGapi);
+    gapi.load("client:picker", initializeGapiAndShowPicker);
   };
 
   return (

@@ -78,16 +78,17 @@ const Index = () => {
   useEffect(() => {
     const loadClient = () => {
       gapi.load("client:auth2", () => {
-        gapi.client.init({
+        (gapi as any).client.init({ // Use type assertion here
           apiKey: API_KEY,
           clientId: CLIENT_ID,
           scope: DRIVE_SCOPE,
           discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
         }).then(() => {
           setIsGoogleApiLoaded(true);
+          console.log("Google API client and auth2 initialized.");
         }).catch(error => {
           console.error("Error initializing Google API client:", error);
-          showError("Gagal memuat Google API untuk transfer file.");
+          showError("Gagal memuat Google API untuk transfer file. Pastikan API Key dan Client ID benar.");
         });
       });
     };
@@ -96,6 +97,7 @@ const Index = () => {
       loadClient();
     } else {
       console.warn("Google API Key or Client ID is missing. Google Drive features will be limited.");
+      showError("Google API Key atau Client ID tidak ditemukan. Fitur Google Drive mungkin tidak berfungsi.");
     }
   }, [API_KEY, CLIENT_ID]);
 
@@ -331,32 +333,35 @@ const Index = () => {
     }
 
     if (!isGoogleApiLoaded) {
-      showError("Google API belum dimuat. Coba lagi sebentar.");
+      showError("Google API belum dimuat sepenuhnya. Coba lagi sebentar.");
       return;
     }
 
     const toastId = showLoading("Mempersiapkan transfer ke Google Drive...");
 
     try {
-      // Authorize if not already authorized with the correct scope
-      const authResult = await new Promise<GoogleAuthResult>((resolve, reject) => {
-        gapi.auth.authorize({
-          client_id: CLIENT_ID,
-          scope: DRIVE_SCOPE,
-          immediate: false, // Force consent screen if scope not granted
-        }, (authRes: GoogleAuthResult) => { // Use the custom interface here
-          if (authRes && !authRes.error) {
-            resolve(authRes);
-          } else {
-            reject(authRes?.error || "Authorization failed.");
-          }
-        });
-      });
+      const authInstance = (gapi as any).auth2.getAuthInstance(); // Use type assertion here
+      if (!authInstance) {
+        throw new Error("Google Auth2 instance not available.");
+      }
 
-      if (!authResult || authResult.error) {
-        dismissToast(toastId);
-        showError("Gagal otentikasi dengan Google Drive. Pastikan Anda memberikan izin.");
-        return;
+      let authResponse: GoogleAuthResult;
+
+      // Check if user is already signed in and has the required scope
+      if (authInstance.isSignedIn.get() && authInstance.currentUser.get().hasGrantedScopes(DRIVE_SCOPE)) {
+        authResponse = authInstance.currentUser.get().getAuthResponse(true); // Get fresh token
+      } else {
+        // If not signed in or scope not granted, prompt for sign-in
+        authResponse = await authInstance.signIn({ scope: DRIVE_SCOPE });
+      }
+
+      if (!authResponse || authResponse.error) {
+        throw new Error(authResponse?.error || "Authorization failed.");
+      }
+
+      const accessToken = authResponse.access_token;
+      if (!accessToken) {
+        throw new Error("Access token tidak diperoleh.");
       }
 
       // Fetch the file from Supabase Storage
@@ -385,7 +390,7 @@ const Index = () => {
       const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${authResult.access_token}`,
+          'Authorization': `Bearer ${accessToken}`, // Use the obtained access token
         },
         body: form,
       });
