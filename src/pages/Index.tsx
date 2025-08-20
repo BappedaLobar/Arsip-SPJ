@@ -11,7 +11,6 @@ import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { FileDown, PlusCircle, FolderArchive, FileQuestion } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -291,8 +290,6 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <MadeWithDyad />
     </div>
   );
 };
