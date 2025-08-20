@@ -26,7 +26,15 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CircleDollarSign,
+  FileText,
+  MessageSquare,
+  Save,
+  Tags,
+  UploadCloud,
+} from "lucide-react";
 import { format } from "date-fns";
 import { SPJ } from "@/types/spj";
 
@@ -74,7 +82,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           name="nomorSpj"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nomor SPJ</FormLabel>
+              <FormLabel className="flex items-center">
+                <FileText className="mr-2 h-4 w-4 text-primary" />
+                Nomor SPJ
+              </FormLabel>
               <FormControl>
                 <Input placeholder="Masukkan nomor SPJ" {...field} />
               </FormControl>
@@ -87,7 +98,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           name="jenisSpj"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Jenis SPJ</FormLabel>
+              <FormLabel className="flex items-center">
+                <Tags className="mr-2 h-4 w-4 text-primary" />
+                Jenis SPJ
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -108,7 +122,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           name="tanggal"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Tanggal</FormLabel>
+              <FormLabel className="flex items-center">
+                <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                Tanggal
+              </FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -146,7 +163,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           name="uraian"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Uraian</FormLabel>
+              <FormLabel className="flex items-center">
+                <MessageSquare className="mr-2 h-4 w-4 text-primary" />
+                Uraian
+              </FormLabel>
               <FormControl>
                 <Textarea placeholder="Masukkan uraian singkat" {...field} />
               </FormControl>
@@ -159,7 +179,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           name="jumlah"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Jumlah (Rp)</FormLabel>
+              <FormLabel className="flex items-center">
+                <CircleDollarSign className="mr-2 h-4 w-4 text-yellow-500" />
+                Jumlah (Rp)
+              </FormLabel>
               <FormControl>
                 <Input type="number" placeholder="Masukkan jumlah" {...field} />
               </FormControl>
@@ -172,7 +195,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           name="file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload File (PDF/JPG/PNG)</FormLabel>
+              <FormLabel className="flex items-center">
+                <UploadCloud className="mr-2 h-4 w-4 text-primary" />
+                Upload File (PDF/JPG/PNG)
+              </FormLabel>
               <FormControl>
                 <Input type="file" accept=".pdf,.jpg,.jpeg,.png" {...form.register("file")} />
               </FormControl>
@@ -184,7 +210,10 @@ export const SpjForm = ({ onSubmit, onCancel }: SpjFormProps) => {
           <Button type="button" variant="outline" onClick={onCancel}>
             Batal
           </Button>
-          <Button type="submit">Simpan</Button>
+          <Button type="submit">
+            <Save className="mr-2 h-4 w-4" />
+            Simpan
+          </Button>
         </div>
       </form>
     </Form>

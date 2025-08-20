@@ -12,6 +12,7 @@ import { SpjTable } from "@/components/SpjTable";
 import { SPJ } from "@/types/spj";
 import { exportToPdf } from "@/lib/pdfGenerator";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { FileDown, PlusCircle } from "lucide-react";
 
 const Index = () => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -36,11 +37,15 @@ const Index = () => {
         <h1 className="text-3xl font-bold">Arsip SPJ Bappeda Lombok Barat</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => exportToPdf(spjData)} disabled={spjData.length === 0}>
+            <FileDown className="mr-2 h-4 w-4" />
             Cetak Laporan (PDF)
           </Button>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
-              <Button>Tambah Arsip SPJ</Button>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Tambah Arsip SPJ
+              </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>

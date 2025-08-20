@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { SPJ } from "@/types/spj";
 
 type SpjTableProps = {
@@ -61,8 +61,12 @@ export const SpjTable = ({ data, onDelete }: SpjTableProps) => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onDelete(item.id)}>
-                        Hapus
+                      <DropdownMenuItem
+                        onClick={() => onDelete(item.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Hapus</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
