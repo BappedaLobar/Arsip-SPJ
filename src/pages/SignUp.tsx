@@ -7,19 +7,24 @@ import { showError, showSuccess, showLoading, dismissToast } from "@/utils/toast
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Archive, User, Mail, Lock, Briefcase, CreditCard, Building } from "lucide-react"; // Menambahkan CreditCard dan Building
+import { Archive, User, Mail, Lock, Briefcase, CreditCard, Building } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bidangOptions } from "@/types/spj";
+
+const positionOptions = [
+  "Staf",
+  "Bendahara Pengeluaran",
+  "Bendahara Pembantu",
+] as const;
 
 const SignUp = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [nip, setNip] = useState("");
-  const [position, setPosition] = useState("");
-  const [bidang, setBidang] = useState("");
+  const [position, setPosition] = useState<typeof positionOptions[number]>("Staf"); // Menggunakan state untuk jabatan
+  const [bidang, setBidang] = useState<typeof bidangOptions[number] | "">(""); // Menggunakan state untuk bidang, memungkinkan string kosong
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -34,7 +39,6 @@ const SignUp = () => {
         options: {
           data: {
             first_name: firstName,
-            last_name: lastName,
             nip: nip,
             position: position,
             bidang: bidang,
@@ -78,19 +82,19 @@ const SignUp = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-          <div className="rounded-md shadow-sm space-y-4"> {/* Mengubah -space-y-px menjadi space-y-4 */}
+          <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <Label htmlFor="first-name" className="sr-only">Nama Depan</Label>
+              <Label htmlFor="first-name" className="sr-only">Nama Lengkap</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" /> {/* Warna biru */}
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
                 <Input
                   id="first-name"
                   name="first-name"
                   type="text"
-                  autoComplete="given-name"
+                  autoComplete="name"
                   required
                   className="pl-9"
-                  placeholder="Nama Depan"
+                  placeholder="Nama Lengkap"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   disabled={loading}
@@ -98,27 +102,9 @@ const SignUp = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="last-name" className="sr-only">Nama Belakang</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" /> {/* Warna biru */}
-                <Input
-                  id="last-name"
-                  name="last-name"
-                  type="text"
-                  autoComplete="family-name"
-                  required
-                  className="pl-9"
-                  placeholder="Nama Belakang"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            <div>
               <Label htmlFor="nip" className="sr-only">NIP</Label>
               <div className="relative">
-                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" /> {/* Ikon CreditCard, warna hijau */}
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
                 <Input
                   id="nip"
                   name="nip"
@@ -135,27 +121,25 @@ const SignUp = () => {
             </div>
             <div>
               <Label htmlFor="position" className="sr-only">Jabatan</Label>
-              <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-500" /> {/* Ikon Briefcase, warna ungu */}
-                <Input
-                  id="position"
-                  name="position"
-                  type="text"
-                  autoComplete="off"
-                  required
-                  className="pl-9"
-                  placeholder="Jabatan"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+              <Select onValueChange={(value) => setPosition(value as typeof positionOptions[number])} value={position} disabled={loading}>
+                <SelectTrigger className="w-full pl-9">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-500" />
+                  <SelectValue placeholder="Pilih Jabatan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {positionOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="bidang" className="sr-only">Bidang</Label>
-              <Select onValueChange={setBidang} value={bidang} disabled={loading}>
+              <Select onValueChange={(value) => setBidang(value as typeof bidangOptions[number])} value={bidang} disabled={loading}>
                 <SelectTrigger className="w-full pl-9">
-                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" /> {/* Ikon Building, warna oranye */}
+                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" />
                   <SelectValue placeholder="Pilih Bidang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -170,7 +154,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="email-address" className="sr-only">Alamat Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" /> {/* Ikon Mail, warna merah */}
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
                 <Input
                   id="email-address"
                   name="email"
@@ -188,7 +172,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="password" className="sr-only">Kata Sandi</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" /> {/* Ikon Lock, warna abu-abu */}
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   id="password"
                   name="password"
