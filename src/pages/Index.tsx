@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
@@ -23,11 +23,24 @@ const Index = () => {
   const navigate = useNavigate();
   const { session, isLoading: isSessionLoading } = useSession();
 
+  // Custom Hooks
+  const { userProfile, isLoadingProfile } = useUserProfile();
+  const isAdmin = userProfile?.jabatan === "Bendahara Pengeluaran";
+
   // State for filters
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedBidang, setSelectedBidang] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+
+  // Effect to set initial selectedBidang based on user profile
+  useEffect(() => {
+    if (!isLoadingProfile && userProfile && !isAdmin && userProfile.bidang) {
+      setSelectedBidang(userProfile.bidang);
+    } else if (!isLoadingProfile && isAdmin) {
+      setSelectedBidang("all"); // Admin can see all
+    }
+  }, [isLoadingProfile, userProfile, isAdmin]);
 
   // Dialog states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -47,8 +60,6 @@ const Index = () => {
     { value: "11", label: "November" }, { value: "12", label: "Desember" },
   ];
 
-  // Custom Hooks
-  const { userProfile, isLoadingProfile } = useUserProfile();
   const { isGoogleApiLoaded, handleTransferToDrive } = useGoogleDriveIntegration();
   const {
     spjData,
@@ -141,7 +152,12 @@ const Index = () => {
   const resetFilters = () => {
     setSelectedYear("all");
     setSelectedMonth("all");
-    setSelectedBidang("all");
+    // Reset bidang based on role
+    if (isAdmin) {
+      setSelectedBidang("all");
+    } else if (userProfile?.bidang) {
+      setSelectedBidang(userProfile.bidang);
+    }
     setSearchKeyword("");
   };
 
@@ -197,6 +213,7 @@ const Index = () => {
         onDownloadArchivesClick={() => setIsDownloadOptionsOpen(true)}
         isLoadingSpj={isLoadingSpj}
         spjDataLength={spjData.length}
+        userProfile={userProfile}
       />
 
       <SpjTable
