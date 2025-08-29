@@ -70,6 +70,9 @@ const Index = () => {
     months,
   });
 
+  console.log("Index - isSessionLoading:", isSessionLoading, "isLoadingProfile:", isLoadingProfile, "userProfile:", userProfile);
+  console.log("Index - isLoadingSpj:", isLoadingSpj, "spjData length:", spjData.length);
+
   // Handlers for UI actions
   const handleAddSpj = () => {
     setEditingSpj(null);
@@ -169,7 +172,7 @@ const Index = () => {
         onLogout={handleLogout}
       />
 
-      <SpjDashboard // New dashboard component
+      <SpjDashboard
         totalSpjGu={totalSpjGu}
         totalSpjLs={totalSpjLs}
         spjCountByBidang={spjCountByBidang}

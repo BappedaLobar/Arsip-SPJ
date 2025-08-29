@@ -16,14 +16,18 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, isLoading } = useSession();
 
+  console.log("ProtectedRoute - isLoading:", isLoading, "session:", session);
+
   if (isLoading) {
     return <div>Loading authentication...</div>; // Or a more sophisticated loading spinner
   }
 
   if (!session) {
+    console.log("ProtectedRoute - No session, navigating to /login");
     return <Navigate to="/login" replace />;
   }
 
+  console.log("ProtectedRoute - Session found, rendering children.");
   return <>{children}</>;
 };
 
