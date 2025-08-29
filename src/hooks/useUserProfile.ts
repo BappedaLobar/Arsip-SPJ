@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/components/SessionContextProvider";
 import { showError } from "@/utils/toast";
+import { Bidang } from "@/types/spj"; // Import Bidang type
 
 interface UserProfile {
   first_name: string;
   last_name?: string;
   nip: string;
   jabatan: string;
-  bidang: string;
+  bidang: Bidang; // Diperbaiki: Menggunakan tipe Bidang
 }
 
 export const useUserProfile = () => {

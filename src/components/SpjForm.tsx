@@ -42,7 +42,8 @@ import {
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { SPJ, bidangOptions } from "@/types/spj";
-import { useGoogleDriveIntegration } from "@/hooks/useGoogleDriveIntegration"; // Import hook baru
+import { useGoogleDriveIntegration } from "@/hooks/useGoogleDriveIntegration";
+import { useUserProfile } from "@/hooks/useUserProfile"; // Import useUserProfile
 
 // Define a simple interface for the Google API authorization result
 interface GoogleAuthResult {
@@ -75,7 +76,9 @@ type SpjFormProps = {
 
 export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-  const { isGoogleApiLoaded, handleGoogleDriveImport } = useGoogleDriveIntegration(); // Gunakan hook baru
+  const { isGoogleApiLoaded, handleGoogleDriveImport } = useGoogleDriveIntegration();
+  const { userProfile } = useUserProfile(); // Dapatkan profil pengguna
+  const isAdmin = userProfile?.jabatan === "Bendahara Pengeluaran";
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -84,6 +87,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
       kodeRekening: "",
       uraian: "",
       jumlah: 0,
+      bidang: isAdmin ? undefined : userProfile?.bidang, // Set default bidang jika bukan admin
     },
   });
 
@@ -101,13 +105,13 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
         uraian: "",
         jumlah: 0,
         jenisSpj: undefined,
-        bidang: undefined,
+        bidang: isAdmin ? undefined : userProfile?.bidang, // Set default bidang jika bukan admin
         tanggal: undefined,
         file: undefined,
       });
       setSelectedFileName(null);
     }
-  }, [initialData, form]);
+  }, [initialData, form, isAdmin, userProfile?.bidang]);
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
     const file = values.file?.[0] || values.file;
@@ -196,7 +200,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                 <Briefcase className="mr-2 h-4 w-4 text-primary" />
                 Bidang
               </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value} disabled={!isAdmin}> {/* Disable jika bukan admin */}
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih bidang" />

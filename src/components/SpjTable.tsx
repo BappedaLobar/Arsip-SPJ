@@ -17,6 +17,7 @@ import { MoreHorizontal, Pencil, Trash2, Download, Eye, CloudUpload } from "luci
 import { SPJ } from "@/types/spj";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useUserProfile } from "@/hooks/useUserProfile"; // Import useUserProfile
 
 type SpjTableProps = {
   data: SPJ[];
@@ -37,6 +38,9 @@ export const SpjTable = ({
   onTransferToDrive, // Destructure new prop
   isLoading,
 }: SpjTableProps) => {
+  const { userProfile } = useUserProfile();
+  const isAdmin = userProfile?.jabatan === "Bendahara Pengeluaran";
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -119,23 +123,27 @@ export const SpjTable = ({
                         <span>Unduh File Arsip</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => item.fileUrl && onTransferToDrive(item)} // New menu item
+                        onClick={() => item.fileUrl && onTransferToDrive(item)}
                         disabled={!item.fileUrl}
                       >
                         <CloudUpload className="mr-2 h-4 w-4" />
                         <span>Transfer ke Google Drive</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(item)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onDelete(item.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Hapus</span>
-                      </DropdownMenuItem>
+                      {(isAdmin || item.bidang === userProfile?.bidang) && ( // Hanya tampilkan Edit jika admin atau bidang cocok
+                        <DropdownMenuItem onClick={() => onEdit(item)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Edit</span>
+                        </DropdownMenuItem>
+                      )}
+                      {isAdmin && ( // Hanya tampilkan Hapus jika admin
+                        <DropdownMenuItem
+                          onClick={() => onDelete(item.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Hapus</span>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

@@ -26,6 +26,8 @@ export const SpjHeader: React.FC<SpjHeaderProps> = ({
   onAddSpj,
   onLogout,
 }) => {
+  const isAdmin = userProfile?.jabatan === "Bendahara Pengeluaran";
+
   return (
     <div className="flex justify-between items-center mb-6">
       <div className="flex items-center gap-4">
@@ -69,11 +71,12 @@ export const SpjHeader: React.FC<SpjHeaderProps> = ({
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Cetak Laporan
         </Button>
-        {/* DialogTrigger dihapus karena Dialog sudah dikelola di Index.tsx */}
-        <Button onClick={onAddSpj}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Tambah Arsip SPJ
-        </Button>
+        {isAdmin && ( // Hanya tampilkan tombol ini jika user adalah admin
+          <Button onClick={onAddSpj}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Tambah Arsip SPJ
+          </Button>
+        )}
         <Button variant="destructive" onClick={onLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Logout
