@@ -3,7 +3,7 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, Link } from "react-router-dom"; // Import Link
+import { useNavigate, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { showError } from "@/utils/toast";
 import { Archive } from "lucide-react";
@@ -36,7 +36,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg">
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Archive className="h-12 w-12 text-primary flex-shrink-0" /> {/* Added flex-shrink-0 */}
+            <Archive className="h-12 w-12 text-primary flex-shrink-0" />
             <h1 className="text-5xl font-extrabold tracking-tight text-gray-900">
               e-SPJ
             </h1>

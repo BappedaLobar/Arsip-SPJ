@@ -22,8 +22,8 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [nip, setNip] = useState("");
-  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Bendahara Pembantu"); // Default ke 'Bendahara Pembantu'
-  const [bidang, setBidang] = useState<typeof bidangOptions[number]>(bidangOptions[0]); // Default ke bidang pertama
+  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Bendahara Pembantu");
+  const [bidang, setBidang] = useState<typeof bidangOptions[number]>(bidangOptions[0]);
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -191,7 +191,7 @@ const SignUp = () => {
           <div>
             <Button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               disabled={loading}
             >
               {loading ? "Mendaftar..." : "Daftar"}

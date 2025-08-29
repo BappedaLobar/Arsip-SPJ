@@ -15,6 +15,7 @@
 
     --primary: 142.1 76.2% 36.3%; /* Green */
     --primary-foreground: 355.7 100% 97.3%; /* White/light */
+    --primary-dark: 142.1 76.2% 30%; /* New: Darker green for hover */
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -63,6 +64,7 @@
 
     --primary: 142.1 76.2% 36.3%; /* Green */
     --primary-foreground: 222.2 47.4% 11.2%;
+    --primary-dark: 142.1 76.2% 30%; /* New: Darker green for hover */
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -96,6 +98,6 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans; /* Apply the new font-sans class */
+    @apply bg-background text-foreground font-sans;
   }
 }
