@@ -90,7 +90,7 @@ const Login = () => {
             },
           }}
           magicLink
-          showLinks={true} // Keep this true to show forgotten password link
+          showLinks={false} // Mengatur ini ke false untuk menyembunyikan semua tautan bawaan
         />
         <div className="text-sm text-center mt-4">
           Belum punya akun?{" "}
