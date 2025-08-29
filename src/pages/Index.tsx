@@ -19,7 +19,7 @@ import { SpjForm } from "@/components/SpjForm";
 import { SpjTable } from "@/components/SpjTable";
 import { SPJ, bidangOptions } from "@/types/spj";
 import { exportToExcel } from "@/lib/excelGenerator";
-import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud, Search } from "lucide-react";
+import { PlusCircle, FolderArchive, FileQuestion, X, FileSpreadsheet, DownloadCloud, Search, LogOut, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   showError,
@@ -31,7 +31,9 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog";
-import { gapi } from "gapi-script"; // Import gapi
+import { gapi } from "gapi-script";
+import { useSession } from "@/components/SessionContextProvider"; // Import useSession hook
+import { useNavigate } from "react-router-dom";
 
 // Define a simple interface for the Google API authorization result
 interface GoogleAuthResult {
@@ -41,6 +43,8 @@ interface GoogleAuthResult {
 }
 
 const Index = () => {
+  const { session, isLoading: isSessionLoading } = useSession(); // Use the session hook
+  const navigate = useNavigate();
   const [spjData, setSpjData] = useState<SPJ[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSpj, setEditingSpj] = useState<SPJ | null>(null);
@@ -52,7 +56,9 @@ const Index = () => {
   const [selectedBidang, setSelectedBidang] = useState<string>("all");
   const [isDownloadOptionsOpen, setIsDownloadOptionsOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
-  const [isGoogleApiLoaded, setIsGoogleApiLoaded] = useState(false); // New state for Google API loading
+  const [isGoogleApiLoaded, setIsGoogleApiLoaded] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; nip: string; position: string; bidang: string } | null>(null);
+
 
   const years = ["2023", "2024", "2025", "2026"];
   const months = [
@@ -72,13 +78,13 @@ const Index = () => {
 
   const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
   const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"; // Scope for creating/modifying files created by the app
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
   // Load Google API client
   useEffect(() => {
     const loadClient = () => {
       gapi.load("client:auth2", () => {
-        (gapi as any).client.init({ // Use type assertion here
+        (gapi as any).client.init({
           apiKey: API_KEY,
           clientId: CLIENT_ID,
           scope: DRIVE_SCOPE,
@@ -100,6 +106,30 @@ const Index = () => {
       showError("Google API Key atau Client ID tidak ditemukan. Fitur Google Drive mungkin tidak berfungsi.");
     }
   }, [API_KEY, CLIENT_ID]);
+
+  // Fetch user profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (session?.user?.id) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("first_name, last_name, nip, position, bidang")
+          .eq("id", session.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error.message);
+          showError("Gagal memuat profil pengguna.");
+        } else if (data) {
+          setUserProfile(data);
+        }
+      }
+    };
+
+    if (session && !isSessionLoading) {
+      fetchProfile();
+    }
+  }, [session, isSessionLoading]);
 
   const fetchSpjData = async (year: string, month: string, bidang: string) => {
     setIsLoading(true);
@@ -151,8 +181,10 @@ const Index = () => {
   };
 
   useEffect(() => {
-    fetchSpjData(selectedYear, selectedMonth, selectedBidang);
-  }, [selectedYear, selectedMonth, selectedBidang]);
+    if (!isSessionLoading && session) { // Only fetch data if session is loaded and exists
+      fetchSpjData(selectedYear, selectedMonth, selectedBidang);
+    }
+  }, [selectedYear, selectedMonth, selectedBidang, session, isSessionLoading]);
 
   const filteredSpjData = useMemo(() => {
     if (!searchKeyword) {
@@ -340,18 +372,16 @@ const Index = () => {
     const toastId = showLoading("Mempersiapkan transfer ke Google Drive...");
 
     try {
-      const authInstance = (gapi as any).auth2.getAuthInstance(); // Use type assertion here
+      const authInstance = (gapi as any).auth2.getAuthInstance();
       if (!authInstance) {
         throw new Error("Google Auth2 instance not available.");
       }
 
       let authResponse: GoogleAuthResult;
 
-      // Check if user is already signed in and has the required scope
       if (authInstance.isSignedIn.get() && authInstance.currentUser.get().hasGrantedScopes(DRIVE_SCOPE)) {
-        authResponse = authInstance.currentUser.get().getAuthResponse(true); // Get fresh token
+        authResponse = authInstance.currentUser.get().getAuthResponse(true);
       } else {
-        // If not signed in or scope not granted, prompt for sign-in
         authResponse = await authInstance.signIn({ scope: DRIVE_SCOPE });
       }
 
@@ -364,21 +394,19 @@ const Index = () => {
         throw new Error("Access token tidak diperoleh.");
       }
 
-      // Fetch the file from Supabase Storage
       const response = await fetch(spj.fileUrl);
       if (!response.ok) {
         throw new Error(`Gagal mengambil file dari Supabase: ${response.statusText}`);
       }
       const blob = await response.blob();
 
-      // Extract original filename
       const filenameParts = spj.fileUrl.split("/").pop()?.split('_');
       const originalFilename = filenameParts && filenameParts.length > 1 ? filenameParts.slice(1).join('_') : `arsip_${spj.nomorPembukuan}`;
       const fileExtension = originalFilename.split('.').pop();
-      const mimeType = blob.type || `application/${fileExtension}`; // Fallback mime type
+      const mimeType = blob.type || `application/${fileExtension}`;
 
       const fileMetadata = {
-        name: `${spj.nomorPembukuan}_${originalFilename}`, // Name in Google Drive
+        name: `${spj.nomorPembukuan}_${originalFilename}`,
         mimeType: mimeType,
       };
 
@@ -386,11 +414,10 @@ const Index = () => {
       form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
       form.append('file', blob);
 
-      // Upload to Google Drive
       const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`, // Use the obtained access token
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: form,
       });
@@ -560,7 +587,24 @@ const Index = () => {
     }
   };
 
+  const handleLogout = async () => {
+    const toastId = showLoading("Logging out...");
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      dismissToast(toastId);
+      showError("Gagal logout: " + error.message);
+    } else {
+      dismissToast(toastId);
+      showSuccess("Berhasil logout!");
+      navigate("/login");
+    }
+  };
+
   const { url: viewerUrl, type: viewerType } = getViewerInfo(selectedFileUrl);
+
+  if (isSessionLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading user session...</div>;
+  }
 
   return (
     <div className="container mx-auto py-10 max-w-full px-4 sm:px-6 lg:px-8">
@@ -574,11 +618,27 @@ const Index = () => {
             <p className="text-muted-foreground">
               BAPPEDA KAB. LOMBOK BARAT
             </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Nyoman Asti Primasantia
-              <br />
-              200103012025052003
-            </p>
+            {userProfile ? (
+              <div className="text-sm text-muted-foreground mt-2">
+                <p className="flex items-center gap-1">
+                  <UserCircle className="h-4 w-4" />
+                  {userProfile.first_name} {userProfile.last_name}
+                </p>
+                <p className="flex items-center gap-1">
+                  <span className="font-semibold">NIP:</span> {userProfile.nip}
+                </p>
+                <p className="flex items-center gap-1">
+                  <span className="font-semibold">Jabatan:</span> {userProfile.position}
+                </p>
+                <p className="flex items-center gap-1">
+                  <span className="font-semibold">Bidang:</span> {userProfile.bidang}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-2">
+                Memuat profil pengguna...
+              </p>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
@@ -610,6 +670,10 @@ const Index = () => {
               />
             </DialogContent>
           </Dialog>
+          <Button variant="destructive" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </div>
 
