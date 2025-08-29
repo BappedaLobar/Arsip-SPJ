@@ -200,7 +200,8 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                 <Briefcase className="mr-2 h-4 w-4 text-primary" />
                 Bidang
               </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={!isAdmin}> {/* Disable jika bukan admin */}
+              {/* Properti disabled dihapus agar semua pengguna dapat memilih bidang */}
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih bidang" />

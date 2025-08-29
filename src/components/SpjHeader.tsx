@@ -64,12 +64,11 @@ export const SpjHeader: React.FC<SpjHeaderProps> = ({
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Cetak Laporan
         </Button>
-        {isAdmin && (
-          <Button onClick={onAddSpj}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Tambah Arsip SPJ
-          </Button>
-        )}
+        {/* Tombol Tambah Arsip SPJ sekarang selalu terlihat */}
+        <Button onClick={onAddSpj}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Tambah Arsip SPJ
+        </Button>
         <Button variant="destructive" onClick={onLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Logout
