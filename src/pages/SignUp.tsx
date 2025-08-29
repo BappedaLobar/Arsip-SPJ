@@ -44,9 +44,13 @@ const SignUp = () => {
 
       if (error) {
         showError("Gagal mendaftar: " + error.message);
-      } else if (data.user) {
-        showSuccess("Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.");
-        navigate("/login"); // Redirect to login after successful sign-up
+      } else if (data.session) { // Jika sesi langsung terbentuk (verifikasi email nonaktif)
+        showSuccess("Pendaftaran berhasil! Anda telah masuk.");
+        navigate("/"); // Langsung arahkan ke dashboard
+      } else if (data.user && !data.session) {
+        // Ini terjadi jika verifikasi email masih aktif di Supabase
+        showError("Pendaftaran berhasil, tetapi verifikasi email diperlukan. Silakan cek email Anda.");
+        navigate("/login"); // Kembali ke login untuk menunggu verifikasi
       } else {
         showError("Pendaftaran gagal. Silakan coba lagi.");
       }
