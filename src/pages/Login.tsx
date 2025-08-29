@@ -3,10 +3,10 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Import Link
 import { useEffect } from "react";
 import { showError } from "@/utils/toast";
-import { Archive } from "lucide-react"; // Import Archive icon
+import { Archive } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,7 +20,6 @@ const Login = () => {
       }
     );
 
-    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/");
@@ -37,7 +36,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg">
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Archive className="h-12 w-12 text-primary" /> {/* Ikon Arsip */}
+            <Archive className="h-12 w-12 text-primary" />
             <h1 className="text-5xl font-extrabold tracking-tight text-gray-900">
               e-SPJ
             </h1>
@@ -56,14 +55,15 @@ const Login = () => {
             variables: {
               default: {
                 colors: {
-                  brand: "hsl(var(--accent))", // Menggunakan warna kuning
-                  brandAccent: "hsl(var(--destructive))", // Menggunakan warna merah
+                  brand: "hsl(var(--accent))",
+                  brandAccent: "hsl(var(--destructive))",
                 },
               },
             },
           }}
           theme="light"
           redirectTo={window.location.origin + "/"}
+          view="sign_in" // Only show sign-in form
           localization={{
             variables: {
               sign_in: {
@@ -73,16 +73,7 @@ const Login = () => {
                 password_input_placeholder: "Masukkan kata sandi Anda",
                 button_label: "Masuk",
                 social_provider_text: "Masuk dengan {{provider}}",
-                link_text: "Sudah punya akun? Masuk",
-              },
-              sign_up: {
-                email_label: "Alamat Email",
-                password_label: "Kata Sandi",
-                email_input_placeholder: "Masukkan alamat email Anda",
-                password_input_placeholder: "Buat kata sandi Anda",
-                button_label: "Daftar",
-                social_provider_text: "Daftar dengan {{provider}}",
-                link_text: "Belum punya akun? Daftar",
+                link_text: "Lupa kata sandi Anda?", // Only show forgotten password link
               },
               forgotten_password: {
                 email_label: "Alamat Email",
@@ -99,8 +90,14 @@ const Login = () => {
             },
           }}
           magicLink
-          showLinks={true}
+          showLinks={true} // Keep this true to show forgotten password link
         />
+        <div className="text-sm text-center mt-4">
+          Belum punya akun?{" "}
+          <Link to="/signup" className="font-medium text-primary hover:text-primary-foreground">
+            Daftar di sini
+          </Link>
+        </div>
       </div>
     </div>
   );
