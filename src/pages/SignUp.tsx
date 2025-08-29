@@ -67,7 +67,7 @@ const SignUp = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg">
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Archive className="h-12 w-12 text-primary" />
+            <Archive className="h-12 w-12 text-primary flex-shrink-0" /> {/* Added flex-shrink-0 */}
             <h1 className="text-5xl font-extrabold tracking-tight text-gray-900">
               e-SPJ
             </h1>
@@ -152,7 +152,7 @@ const SignUp = () => {
                 />
               </div>
             </div>
-            <div> {/* Removed mb-3 from this div */}
+            <div>
               <Label htmlFor="bidang" className="sr-only">Bidang</Label>
               <Select onValueChange={setBidang} value={bidang} disabled={loading}>
                 <SelectTrigger className="w-full pl-9">
