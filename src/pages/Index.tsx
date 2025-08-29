@@ -17,6 +17,7 @@ import { SpjHeader } from "@/components/SpjHeader";
 import { SpjFilters } from "@/components/SpjFilters";
 import { FileViewerDialog } from "@/components/FileViewerDialog";
 import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog";
+import { SpjDashboard } from "@/components/SpjDashboard"; // Import SpjDashboard
 
 const Index = () => {
   const navigate = useNavigate();
@@ -56,6 +57,9 @@ const Index = () => {
     handleSaveSpj,
     handleDeleteSpj,
     handleDownloadArchives,
+    totalSpjGu, // New
+    totalSpjLs, // New
+    spjCountByBidang, // New
   } = useSpjData({
     session,
     isSessionLoading,
@@ -163,6 +167,12 @@ const Index = () => {
         onPrintReport={exportToExcel}
         onAddSpj={handleAddSpj}
         onLogout={handleLogout}
+      />
+
+      <SpjDashboard // New dashboard component
+        totalSpjGu={totalSpjGu}
+        totalSpjLs={totalSpjLs}
+        spjCountByBidang={spjCountByBidang}
       />
 
       <SpjFilters

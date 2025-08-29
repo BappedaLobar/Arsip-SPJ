@@ -22,6 +22,13 @@ interface GoogleDriveFile {
   token: string;
 }
 
+// Define the type for items fetched for download to match Supabase column names
+interface SpjDownloadItem {
+  nomor_pembukuan: string;
+  file_url: string | null;
+  tanggal: string; // Assuming it comes as a string from DB
+}
+
 export const useSpjData = ({
   session,
   isSessionLoading,
@@ -33,6 +40,9 @@ export const useSpjData = ({
 }: UseSpjDataProps) => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
   const [isLoadingSpj, setIsLoadingSpj] = useState(true);
+  const [totalSpjGu, setTotalSpjGu] = useState(0); // New state
+  const [totalSpjLs, setTotalSpjLs] = useState(0); // New state
+  const [spjCountByBidang, setSpjCountByBidang] = useState<{ [key: string]: number }>({}); // New state
 
   const fetchSpjData = useCallback(async () => {
     setIsLoadingSpj(true);
@@ -78,7 +88,26 @@ export const useSpjData = ({
         formattedData = formattedData.filter(item => item.tanggal.getMonth() === monthInt);
       }
 
+      // Calculate aggregated data
+      let totalGu = 0;
+      let totalLs = 0;
+      const countByBidang: { [key: string]: number } = {};
+
+      formattedData.forEach(item => {
+        if (item.jenisSpj === "GU") {
+          totalGu++;
+        } else if (item.jenisSpj === "LS") {
+          totalLs++;
+        }
+        if (item.bidang) {
+          countByBidang[item.bidang] = (countByBidang[item.bidang] || 0) + 1;
+        }
+      });
+
       setSpjData(formattedData);
+      setTotalSpjGu(totalGu);
+      setTotalSpjLs(totalLs);
+      setSpjCountByBidang(countByBidang);
     }
     setIsLoadingSpj(false);
   }, [session, selectedYear, selectedMonth, selectedBidang]);
@@ -210,7 +239,7 @@ export const useSpjData = ({
     fetchSpjData();
   }, [spjData, fetchSpjData]);
 
-  const fetchFilesForDownload = useCallback(async (yearToDownload: string, monthToDownload: string, bidangToDownload: string) => {
+  const fetchFilesForDownload = useCallback(async (yearToDownload: string, monthToDownload: string, bidangToDownload: string): Promise<SpjDownloadItem[]> => {
     let query = supabase.from("spj").select("nomor_pembukuan, file_url, tanggal").not("file_url", "is", null);
 
     if (yearToDownload !== "all") {
@@ -241,10 +270,10 @@ export const useSpjData = ({
       return [];
     }
 
-    let filteredData = data;
+    let filteredData: SpjDownloadItem[] = data;
     if (yearToDownload === "all" && monthToDownload !== "all") {
       const monthInt = parseInt(monthToDownload) - 1;
-      filteredData = data.filter((item: any) => {
+      filteredData = data.filter((item: SpjDownloadItem) => {
         const dateParts = item.tanggal.split('-').map(Number);
         const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
         return localDate.getMonth() === monthInt;
@@ -278,7 +307,7 @@ export const useSpjData = ({
                     const blob = await response.blob();
                     const filename = item.file_url.split("/").pop() || "file";
                     const originalFilename = filename.substring(filename.indexOf('_') + 1) || filename;
-                    zip.file(`${item.nomor_pembukuan}_${originalFilename}`, blob);
+                    zip.file(`${item.nomor_pembukuan}_${originalFilename}`, blob); // Fixed: Use item.nomor_pembukuan
                     filesAddedCount++;
                 } catch (e) {
                     console.error(`Error adding file ${item.file_url} to zip:`, e);
@@ -330,5 +359,8 @@ export const useSpjData = ({
     handleSaveSpj,
     handleDeleteSpj,
     handleDownloadArchives,
+    totalSpjGu, // New return value
+    totalSpjLs, // New return value
+    spjCountByBidang, // New return value
   };
 };
