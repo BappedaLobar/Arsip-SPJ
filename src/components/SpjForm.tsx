@@ -42,12 +42,18 @@ import {
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { SPJ, bidangOptions } from "@/types/spj";
-import { gapi } from "gapi-script";
+import { useGoogleDriveIntegration } from "@/hooks/useGoogleDriveIntegration"; // Import hook baru
 
 // Define a simple interface for the Google API authorization result
 interface GoogleAuthResult {
   access_token?: string;
   error?: string;
+}
+
+interface GoogleDriveFile {
+  name: string;
+  url: string;
+  token: string;
 }
 
 const formSchema = z.object({
@@ -58,17 +64,19 @@ const formSchema = z.object({
   tanggal: z.date({ required_error: "Tanggal harus diisi" }),
   uraian: z.string().min(1, "Uraian harus diisi"),
   jumlah: z.coerce.number().min(1, "Jumlah harus lebih dari 0"),
-  file: z.any().optional(),
+  file: z.any().optional(), // Akan menangani File atau GoogleDriveFile
 });
 
 type SpjFormProps = {
-  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | { name: string; url: string; token: string } }) => void;
+  onSubmit: (data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | GoogleDriveFile }) => void;
   onCancel: () => void;
   initialData?: SPJ | null;
 };
 
 export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const { isGoogleApiLoaded, handleGoogleDriveImport } = useGoogleDriveIntegration(); // Gunakan hook baru
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -115,89 +123,9 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
     });
   };
 
-  const handleGoogleDriveImport = () => {
-    const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-    const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
-
-    if (!API_KEY || !CLIENT_ID) {
-      alert("Konfigurasi Google Drive API tidak ditemukan. Pastikan VITE_GOOGLE_API_KEY dan VITE_GOOGLE_CLIENT_ID diatur di file .env Anda.");
-      return;
-    }
-
-    const initializeGapiAndShowPicker = () => {
-      gapi.load("client:auth2", () => { // Load auth2 here
-        (gapi as any).client.init({ // Use type assertion here
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          scope: SCOPES,
-          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-        }).then(() => {
-          showPicker();
-        }).catch(error => {
-          console.error("Error initializing Google API client for picker:", error);
-          alert("Gagal memuat Google API untuk Picker. Cek konsol untuk detail.");
-        });
-      });
-    };
-
-    const showPicker = async () => {
-      try {
-        const authInstance = (gapi as any).auth2.getAuthInstance(); // Use type assertion here
-        if (!authInstance) {
-          throw new Error("Google Auth2 instance not available for picker.");
-        }
-
-        let authResponse: GoogleAuthResult;
-
-        // Check if user is already signed in and has the required scope
-        if (authInstance.isSignedIn.get() && authInstance.currentUser.get().hasGrantedScopes(SCOPES)) {
-          authResponse = authInstance.currentUser.get().getAuthResponse(true); // Get fresh token
-        } else {
-          // If not signed in or scope not granted, prompt for sign-in
-          authResponse = await authInstance.signIn({ scope: SCOPES });
-        }
-
-        if (!authResponse || authResponse.error) {
-          throw new Error(authResponse?.error || "Authorization failed for picker.");
-        }
-
-        const accessToken = authResponse.access_token;
-        if (!accessToken) {
-          throw new Error("Access token tidak diperoleh untuk picker.");
-        }
-
-        const view = new google.picker.DocsView();
-        view.setMimeTypes("application/pdf,image/png,image/jpeg");
-        const picker = new google.picker.PickerBuilder()
-          .setAppId(CLIENT_ID.split('-')[0])
-          .setOAuthToken(accessToken)
-          .addView(view)
-          .setDeveloperKey(API_KEY)
-          .setCallback(pickerCallback)
-          .build();
-        picker.setVisible(true);
-
-      } catch (error) {
-        console.error("Error showing Google Picker:", error);
-        alert(`Gagal menampilkan Google Picker: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    };
-
-    const pickerCallback = (data: any) => {
-      if (data.action === google.picker.Action.PICKED) {
-        const doc = data.docs[0];
-        const fileData = {
-          name: doc.name,
-          url: `https://www.googleapis.com/drive/v3/files/${doc.id}?alt=media`,
-          token: (gapi as any).auth2.getAuthInstance().currentUser.get().getAuthResponse(true).access_token, // Use type assertion here
-        };
-        form.setValue("file", fileData as any);
-        setSelectedFileName(doc.name);
-      }
-    };
-
-    gapi.load("client:picker", initializeGapiAndShowPicker);
+  const onGoogleDriveFilePicked = (fileData: GoogleDriveFile) => {
+    form.setValue("file", fileData);
+    setSelectedFileName(fileData.name);
   };
 
   return (
@@ -381,7 +309,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
                 }}
               />
             </FormControl>
-            <Button type="button" variant="outline" onClick={handleGoogleDriveImport}>
+            <Button type="button" variant="outline" onClick={() => handleGoogleDriveImport(onGoogleDriveFilePicked)} disabled={!isGoogleApiLoaded}>
               <Cloud className="mr-2 h-4 w-4" />
               Drive
             </Button>
