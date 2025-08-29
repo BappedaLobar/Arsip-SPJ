@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme"; // Import defaultTheme to extend font-sans
 
 export default {
   darkMode: ["class"],
@@ -18,6 +19,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", ...fontFamily.sans], // Add Inter as the primary sans-serif font
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
