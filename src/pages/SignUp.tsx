@@ -12,8 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { bidangOptions } from "@/types/spj";
 
 const jabatanOptions = [ // Mengubah nama konstanta dari positionOptions menjadi jabatanOptions
-  "Staf",
-  "Bendahara Pengeluaran",
+  "Bendahara Pengeluaran", // Menghilangkan "Staf"
   "Bendahara Pembantu",
 ] as const;
 
@@ -24,7 +23,7 @@ const SignUp = () => {
   const [firstName, setFirstName] = useState("");
   // Menghapus state lastName
   const [nip, setNip] = useState("");
-  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Staf"); // Menggunakan state 'jabatan'
+  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Bendahara Pengeluaran"); // Mengubah default menjadi "Bendahara Pengeluaran"
   const [bidang, setBidang] = useState<typeof bidangOptions[number] | "">("");
   const [loading, setLoading] = useState(false);
 
