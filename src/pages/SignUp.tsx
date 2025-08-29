@@ -90,7 +90,7 @@ const SignUp = () => {
                   type="text"
                   autoComplete="given-name"
                   required
-                  className="pl-9 mb-3"
+                  className="pl-9"
                   placeholder="Nama Depan"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -108,7 +108,7 @@ const SignUp = () => {
                   type="text"
                   autoComplete="family-name"
                   required
-                  className="pl-9 mb-3"
+                  className="pl-9"
                   placeholder="Nama Belakang"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -126,7 +126,7 @@ const SignUp = () => {
                   type="text"
                   autoComplete="off"
                   required
-                  className="pl-9 mb-3"
+                  className="pl-9"
                   placeholder="NIP"
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
@@ -144,7 +144,7 @@ const SignUp = () => {
                   type="text"
                   autoComplete="off"
                   required
-                  className="pl-9 mb-3"
+                  className="pl-9"
                   placeholder="Jabatan"
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
@@ -152,7 +152,7 @@ const SignUp = () => {
                 />
               </div>
             </div>
-            <div className="mb-3">
+            <div> {/* Removed mb-3 from this div */}
               <Label htmlFor="bidang" className="sr-only">Bidang</Label>
               <Select onValueChange={setBidang} value={bidang} disabled={loading}>
                 <SelectTrigger className="w-full pl-9">
@@ -178,7 +178,7 @@ const SignUp = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="pl-9 mb-3"
+                  className="pl-9"
                   placeholder="Alamat Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
