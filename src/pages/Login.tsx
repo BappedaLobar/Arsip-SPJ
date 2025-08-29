@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { showError } from "@/utils/toast";
+import { Archive } from "lucide-react"; // Import Archive icon
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,7 +36,12 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900">e-SPJ</h1>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Archive className="h-12 w-12 text-primary" /> {/* Ikon Arsip */}
+            <h1 className="text-5xl font-extrabold tracking-tight text-gray-900">
+              e-SPJ
+            </h1>
+          </div>
           <p className="mt-2 text-xl text-gray-700">Bappeda</p>
           <p className="text-lg text-gray-600">Kabupaten Lombok Barat</p>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -44,7 +50,7 @@ const Login = () => {
         </div>
         <Auth
           supabaseClient={supabase}
-          providers={[]} // Anda bisa menambahkan 'google', 'github', dll. di sini
+          providers={[]}
           appearance={{
             theme: ThemeSupa,
             variables: {
