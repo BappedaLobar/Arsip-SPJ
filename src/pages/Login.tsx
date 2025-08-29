@@ -56,8 +56,8 @@ const Login = () => {
             variables: {
               default: {
                 colors: {
-                  brand: "hsl(var(--primary))",
-                  brandAccent: "hsl(var(--primary-foreground))",
+                  brand: "hsl(var(--accent))", // Menggunakan warna kuning
+                  brandAccent: "hsl(var(--destructive))", // Menggunakan warna merah
                 },
               },
             },
