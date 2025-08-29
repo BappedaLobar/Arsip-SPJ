@@ -200,7 +200,7 @@ const SignUp = () => {
         </form>
         <div className="text-sm text-center mt-4">
           Sudah punya akun?{" "}
-          <Link to="/login" className="font-medium text-primary hover:text-primary-foreground">
+          <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
             Masuk
           </Link>
         </div>

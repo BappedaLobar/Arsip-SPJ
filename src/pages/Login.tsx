@@ -94,7 +94,7 @@ const Login = () => {
         />
         <div className="text-sm text-center mt-4">
           Belum punya akun?{" "}
-          <Link to="/signup" className="font-medium text-primary hover:text-primary-foreground">
+          <Link to="/signup" className="font-medium text-primary hover:text-primary-dark">
             Daftar di sini
           </Link>
         </div>
