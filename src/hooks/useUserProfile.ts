@@ -28,7 +28,7 @@ export const useUserProfile = () => {
 
         if (error) {
           console.error("Error fetching profile:", error.message);
-          showError("Gagal memuat profil pengguna.");
+          showError("Gagal memuat profil pengguna: " + error.message); // Menambahkan detail error
         } else if (data) {
           setUserProfile(data);
         }
