@@ -159,7 +159,11 @@ const Index = () => {
   };
 
   if (isSessionLoading || isLoadingProfile) {
-    return <div className="min-h-screen flex items-center justify-center">Loading user session and profile...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-blue-100 text-blue-800 text-xl font-semibold">
+        Loading user session and profile...
+      </div>
+    );
   }
 
   return (
