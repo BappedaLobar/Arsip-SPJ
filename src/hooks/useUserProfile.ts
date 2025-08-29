@@ -2,15 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/components/SessionContextProvider";
 import { showError } from "@/utils/toast";
-import { Bidang } from "@/types/spj"; // Import Bidang type
-
-interface UserProfile {
-  first_name: string;
-  last_name?: string;
-  nip: string;
-  jabatan: string;
-  bidang: Bidang; // Diperbaiki: Menggunakan tipe Bidang
-}
+import { UserProfile } from "@/types/user"; // Import UserProfile dari file terpusat
 
 export const useUserProfile = () => {
   const { session, isLoading: isSessionLoading } = useSession();
@@ -22,15 +14,15 @@ export const useUserProfile = () => {
       if (session?.user?.id) {
         const { data, error } = await supabase
           .from("profiles")
-          .select("first_name, last_name, nip, jabatan, bidang")
+          .select("id, first_name, last_name, nip, jabatan, bidang, avatar_url, updated_at")
           .eq("id", session.user.id)
           .single();
 
         if (error) {
           console.error("Error fetching profile:", error.message);
-          showError("Gagal memuat profil pengguna: " + error.message); // Menambahkan detail error
+          showError("Gagal memuat profil pengguna: " + error.message);
         } else if (data) {
-          setUserProfile(data);
+          setUserProfile(data as UserProfile);
         }
       }
       setIsLoadingProfile(false);

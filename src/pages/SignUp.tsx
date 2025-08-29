@@ -11,8 +11,8 @@ import { Archive, User, Mail, Lock, Briefcase, CreditCard, Building } from "luci
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bidangOptions } from "@/types/spj";
 
-const jabatanOptions = [ // Mengubah nama konstanta dari positionOptions menjadi jabatanOptions
-  "Bendahara Pengeluaran", // Menghilangkan "Staf"
+const jabatanOptions = [
+  "Bendahara Pengeluaran",
   "Bendahara Pembantu",
 ] as const;
 
@@ -21,10 +21,9 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
-  // Menghapus state lastName
   const [nip, setNip] = useState("");
-  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Bendahara Pengeluaran"); // Mengubah default menjadi "Bendahara Pengeluaran"
-  const [bidang, setBidang] = useState<typeof bidangOptions[number] | "">("");
+  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Bendahara Pembantu"); // Default ke 'Bendahara Pembantu'
+  const [bidang, setBidang] = useState<typeof bidangOptions[number]>(bidangOptions[0]); // Default ke bidang pertama
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -40,7 +39,7 @@ const SignUp = () => {
           data: {
             first_name: firstName,
             nip: nip,
-            jabatan: jabatan, // Mengirim 'jabatan' ke raw_user_meta_data
+            jabatan: jabatan,
             bidang: bidang,
           },
         },
@@ -120,7 +119,7 @@ const SignUp = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="jabatan" className="sr-only">Jabatan</Label> {/* Mengubah htmlFor dan label */}
+              <Label htmlFor="jabatan" className="sr-only">Jabatan</Label>
               <Select onValueChange={(value) => setJabatan(value as typeof jabatanOptions[number])} value={jabatan} disabled={loading}>
                 <SelectTrigger className="w-full pl-9">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-500" />
@@ -137,7 +136,7 @@ const SignUp = () => {
             </div>
             <div>
               <Label htmlFor="bidang" className="sr-only">Bidang</Label>
-              <Select onValueChange={(value) => setBidang(value as typeof bidangOptions[number])} value={bidang} disabled={loading}>
+              <Select onValueChange={(value) => setBidang(value as typeof bidangOptions[number])} value={bidang} disabled={loading} required>
                 <SelectTrigger className="w-full pl-9">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" />
                   <SelectValue placeholder="Pilih Bidang" />

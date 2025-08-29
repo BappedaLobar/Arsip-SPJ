@@ -3,15 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DownloadCloud, Search, X } from "lucide-react";
-import { bidangOptions } from "@/types/spj";
-
-interface UserProfile {
-  first_name: string;
-  last_name?: string;
-  nip: string;
-  jabatan: string;
-  bidang: (typeof bidangOptions)[number];
-}
+import { UserProfile } from "@/types/user"; // Import UserProfile dari file terpusat
+import { bidangOptions } from "@/types/spj"; // Tetap import bidangOptions
 
 interface SpjFiltersProps {
   years: string[];
@@ -28,7 +21,7 @@ interface SpjFiltersProps {
   onDownloadArchivesClick: () => void;
   isLoadingSpj: boolean;
   spjDataLength: number;
-  userProfile: UserProfile | null; // New prop
+  userProfile: UserProfile | null;
 }
 
 export const SpjFilters: React.FC<SpjFiltersProps> = ({
@@ -46,7 +39,7 @@ export const SpjFilters: React.FC<SpjFiltersProps> = ({
   onDownloadArchivesClick,
   isLoadingSpj,
   spjDataLength,
-  userProfile, // Destructure new prop
+  userProfile,
 }) => {
   const isAdmin = userProfile?.jabatan === "Bendahara Pengeluaran";
   const userBidang = userProfile?.bidang;
@@ -54,7 +47,7 @@ export const SpjFilters: React.FC<SpjFiltersProps> = ({
   const showResetButton =
     selectedYear !== "all" ||
     selectedMonth !== "all" ||
-    (isAdmin ? selectedBidang !== "all" : false) || // Only show reset for bidang if admin
+    (isAdmin ? selectedBidang !== "all" : false) ||
     searchKeyword !== "";
 
   return (
@@ -91,13 +84,13 @@ export const SpjFilters: React.FC<SpjFiltersProps> = ({
       <Select
         value={selectedBidang}
         onValueChange={setSelectedBidang}
-        disabled={!isAdmin && !!userBidang} // Disable if not admin and userBidang exists
+        disabled={!isAdmin && !!userBidang}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Pilih Bidang" />
         </SelectTrigger>
         <SelectContent>
-          {isAdmin && <SelectItem value="all">Semua Bidang</SelectItem>} {/* Only admin can select 'All' */}
+          {isAdmin && <SelectItem value="all">Semua Bidang</SelectItem>}
           {bidangOptions.map((bidang) => (
             <SelectItem key={bidang} value={bidang}>
               {bidang}

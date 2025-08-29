@@ -2,14 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FolderArchive, FileSpreadsheet, LogOut, UserCircle } from "lucide-react";
 import { SPJ } from "@/types/spj";
-
-interface UserProfile {
-  first_name: string;
-  last_name?: string;
-  nip: string;
-  jabatan: string;
-  bidang: string;
-}
+import { UserProfile } from "@/types/user"; // Import UserProfile dari file terpusat
 
 interface SpjHeaderProps {
   userProfile: UserProfile | null;
@@ -71,7 +64,7 @@ export const SpjHeader: React.FC<SpjHeaderProps> = ({
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Cetak Laporan
         </Button>
-        {isAdmin && ( // Hanya tampilkan tombol ini jika user adalah admin
+        {isAdmin && (
           <Button onClick={onAddSpj}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Tambah Arsip SPJ
