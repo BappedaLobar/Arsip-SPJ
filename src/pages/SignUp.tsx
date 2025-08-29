@@ -7,7 +7,7 @@ import { showError, showSuccess, showLoading, dismissToast } from "@/utils/toast
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Archive, User, Mail, Lock, Briefcase } from "lucide-react";
+import { Archive, User, Mail, Lock, Briefcase, CreditCard, Building } from "lucide-react"; // Menambahkan CreditCard dan Building
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bidangOptions } from "@/types/spj";
 
@@ -44,13 +44,12 @@ const SignUp = () => {
 
       if (error) {
         showError("Gagal mendaftar: " + error.message);
-      } else if (data.session) { // Jika sesi langsung terbentuk (verifikasi email nonaktif)
+      } else if (data.session) {
         showSuccess("Pendaftaran berhasil! Anda telah masuk.");
-        navigate("/"); // Langsung arahkan ke dashboard
+        navigate("/");
       } else if (data.user && !data.session) {
-        // Ini terjadi jika verifikasi email masih aktif di Supabase
         showError("Pendaftaran berhasil, tetapi verifikasi email diperlukan. Silakan cek email Anda.");
-        navigate("/login"); // Kembali ke login untuk menunggu verifikasi
+        navigate("/login");
       } else {
         showError("Pendaftaran gagal. Silakan coba lagi.");
       }
@@ -67,7 +66,7 @@ const SignUp = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg">
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Archive className="h-12 w-12 text-primary flex-shrink-0" /> {/* Added flex-shrink-0 */}
+            <Archive className="h-12 w-12 text-primary flex-shrink-0" />
             <h1 className="text-5xl font-extrabold tracking-tight text-gray-900">
               e-SPJ
             </h1>
@@ -79,11 +78,11 @@ const SignUp = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="rounded-md shadow-sm space-y-4"> {/* Mengubah -space-y-px menjadi space-y-4 */}
             <div>
               <Label htmlFor="first-name" className="sr-only">Nama Depan</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" /> {/* Warna biru */}
                 <Input
                   id="first-name"
                   name="first-name"
@@ -101,7 +100,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="last-name" className="sr-only">Nama Belakang</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" /> {/* Warna biru */}
                 <Input
                   id="last-name"
                   name="last-name"
@@ -119,7 +118,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="nip" className="sr-only">NIP</Label>
               <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" /> {/* Ikon CreditCard, warna hijau */}
                 <Input
                   id="nip"
                   name="nip"
@@ -137,7 +136,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="position" className="sr-only">Jabatan</Label>
               <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-500" /> {/* Ikon Briefcase, warna ungu */}
                 <Input
                   id="position"
                   name="position"
@@ -156,7 +155,7 @@ const SignUp = () => {
               <Label htmlFor="bidang" className="sr-only">Bidang</Label>
               <Select onValueChange={setBidang} value={bidang} disabled={loading}>
                 <SelectTrigger className="w-full pl-9">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" /> {/* Ikon Building, warna oranye */}
                   <SelectValue placeholder="Pilih Bidang" />
                 </SelectTrigger>
                 <SelectContent>
@@ -171,7 +170,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="email-address" className="sr-only">Alamat Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" /> {/* Ikon Mail, warna merah */}
                 <Input
                   id="email-address"
                   name="email"
@@ -189,7 +188,7 @@ const SignUp = () => {
             <div>
               <Label htmlFor="password" className="sr-only">Kata Sandi</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" /> {/* Ikon Lock, warna abu-abu */}
                 <Input
                   id="password"
                   name="password"
