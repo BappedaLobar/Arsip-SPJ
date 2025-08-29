@@ -34,9 +34,14 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Masuk atau Daftar
-        </h2>
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold text-gray-900">e-SPJ</h1>
+          <p className="mt-2 text-xl text-gray-700">Bappeda</p>
+          <p className="text-lg text-gray-600">Kabupaten Lombok Barat</p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Selamat Datang
+          </h2>
+        </div>
         <Auth
           supabaseClient={supabase}
           providers={[]} // Anda bisa menambahkan 'google', 'github', dll. di sini
