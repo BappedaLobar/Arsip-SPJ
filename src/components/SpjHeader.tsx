@@ -27,7 +27,7 @@ export const SpjHeader: React.FC<SpjHeaderProps> = ({
         <FolderArchive className="h-12 w-12 text-primary" />
         <div className="text-left">
           <h1 className="text-2xl font-bold tracking-tight">
-            ARSIP SPJ KEUANGAN
+            e- SPJ
           </h1>
           <p className="text-muted-foreground">
             BAPPEDA KAB. LOMBOK BARAT
