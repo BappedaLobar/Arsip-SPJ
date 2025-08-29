@@ -11,7 +11,7 @@ import { Archive, User, Mail, Lock, Briefcase, CreditCard, Building } from "luci
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bidangOptions } from "@/types/spj";
 
-const positionOptions = [
+const jabatanOptions = [ // Mengubah nama konstanta dari positionOptions menjadi jabatanOptions
   "Staf",
   "Bendahara Pengeluaran",
   "Bendahara Pembantu",
@@ -22,9 +22,10 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
+  // Menghapus state lastName
   const [nip, setNip] = useState("");
-  const [position, setPosition] = useState<typeof positionOptions[number]>("Staf"); // Menggunakan state untuk jabatan
-  const [bidang, setBidang] = useState<typeof bidangOptions[number] | "">(""); // Menggunakan state untuk bidang, memungkinkan string kosong
+  const [jabatan, setJabatan] = useState<typeof jabatanOptions[number]>("Staf"); // Menggunakan state 'jabatan'
+  const [bidang, setBidang] = useState<typeof bidangOptions[number] | "">("");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -40,7 +41,7 @@ const SignUp = () => {
           data: {
             first_name: firstName,
             nip: nip,
-            position: position,
+            jabatan: jabatan, // Mengirim 'jabatan' ke raw_user_meta_data
             bidang: bidang,
           },
         },
@@ -120,14 +121,14 @@ const SignUp = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="position" className="sr-only">Jabatan</Label>
-              <Select onValueChange={(value) => setPosition(value as typeof positionOptions[number])} value={position} disabled={loading}>
+              <Label htmlFor="jabatan" className="sr-only">Jabatan</Label> {/* Mengubah htmlFor dan label */}
+              <Select onValueChange={(value) => setJabatan(value as typeof jabatanOptions[number])} value={jabatan} disabled={loading}>
                 <SelectTrigger className="w-full pl-9">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-500" />
                   <SelectValue placeholder="Pilih Jabatan" />
                 </SelectTrigger>
                 <SelectContent>
-                  {positionOptions.map((option) => (
+                  {jabatanOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>

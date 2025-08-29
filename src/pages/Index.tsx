@@ -32,18 +32,16 @@ import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import { DownloadOptionsDialog } from "@/components/DownloadOptionsDialog";
 import { gapi } from "gapi-script";
-import { useSession } from "@/components/SessionContextProvider"; // Import useSession hook
+import { useSession } from "@/components/SessionContextProvider";
 import { useNavigate } from "react-router-dom";
 
-// Define a simple interface for the Google API authorization result
 interface GoogleAuthResult {
   access_token?: string;
   error?: string;
-  // Add other properties if needed, e.g., expires_in, token_type
 }
 
 const Index = () => {
-  const { session, isLoading: isSessionLoading } = useSession(); // Use the session hook
+  const { session, isLoading: isSessionLoading } = useSession();
   const navigate = useNavigate();
   const [spjData, setSpjData] = useState<SPJ[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -57,8 +55,7 @@ const Index = () => {
   const [isDownloadOptionsOpen, setIsDownloadOptionsOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [isGoogleApiLoaded, setIsGoogleApiLoaded] = useState(false);
-  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; nip: string; position: string; bidang: string } | null>(null);
-
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name?: string; nip: string; jabatan: string; bidang: string } | null>(null); // Mengubah 'position' menjadi 'jabatan'
 
   const years = ["2023", "2024", "2025", "2026"];
   const months = [
@@ -80,7 +77,6 @@ const Index = () => {
   const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
-  // Load Google API client
   useEffect(() => {
     const loadClient = () => {
       gapi.load("client:auth2", () => {
@@ -107,13 +103,12 @@ const Index = () => {
     }
   }, [API_KEY, CLIENT_ID]);
 
-  // Fetch user profile
   useEffect(() => {
     const fetchProfile = async () => {
       if (session?.user?.id) {
         const { data, error } = await supabase
           .from("profiles")
-          .select("first_name, last_name, nip, position, bidang")
+          .select("first_name, last_name, nip, jabatan, bidang") // Mengubah 'position' menjadi 'jabatan'
           .eq("id", session.user.id)
           .single();
 
@@ -181,7 +176,7 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (!isSessionLoading && session) { // Only fetch data if session is loaded and exists
+    if (!isSessionLoading && session) {
       fetchSpjData(selectedYear, selectedMonth, selectedBidang);
     }
   }, [selectedYear, selectedMonth, selectedBidang, session, isSessionLoading]);
@@ -628,7 +623,7 @@ const Index = () => {
                   <span className="font-semibold">NIP:</span> {userProfile.nip}
                 </p>
                 <p className="flex items-center gap-1">
-                  <span className="font-semibold">Jabatan:</span> {userProfile.position}
+                  <span className="font-semibold">Jabatan:</span> {userProfile.jabatan} {/* Mengubah 'position' menjadi 'jabatan' */}
                 </p>
                 <p className="flex items-center gap-1">
                   <span className="font-semibold">Bidang:</span> {userProfile.bidang}
