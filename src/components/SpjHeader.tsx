@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle, FolderArchive, FileSpreadsheet, LogOut, UserCircle } from "lucide-react";
 import { SPJ } from "@/types/spj";
 
@@ -70,12 +69,11 @@ export const SpjHeader: React.FC<SpjHeaderProps> = ({
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Cetak Laporan
         </Button>
-        <DialogTrigger asChild>
-          <Button onClick={onAddSpj}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Tambah Arsip SPJ
-          </Button>
-        </DialogTrigger>
+        {/* DialogTrigger dihapus karena Dialog sudah dikelola di Index.tsx */}
+        <Button onClick={onAddSpj}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Tambah Arsip SPJ
+        </Button>
         <Button variant="destructive" onClick={onLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Logout
