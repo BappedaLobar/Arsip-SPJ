@@ -98,6 +98,7 @@ const Login = () => {
             Daftar di sini
           </Link>
         </div>
+        <p className="text-center text-xs text-gray-500 mt-6">v.1.0.76</p>
       </div>
     </div>
   );
