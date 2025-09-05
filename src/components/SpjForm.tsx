@@ -57,6 +57,8 @@ interface GoogleDriveFile {
   token: string;
 }
 
+const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
+
 const formSchema = z.object({
   nomorPembukuan: z.string().min(1, "No. Pembukuan harus diisi"),
   kodeRekening: z.string().min(1, "Kode Rekening harus diisi"),
@@ -65,7 +67,17 @@ const formSchema = z.object({
   tanggal: z.date({ required_error: "Tanggal harus diisi" }),
   uraian: z.string().min(1, "Uraian harus diisi"),
   jumlah: z.coerce.number().min(1, "Jumlah harus lebih dari 0"),
-  file: z.any().optional(), // Akan menangani File atau GoogleDriveFile
+  file: z.any()
+    .optional()
+    .refine((value) => {
+      // If no file is selected, or it's not a FileList (e.g., Google Drive object), pass validation
+      if (!value || !(value instanceof FileList) || value.length === 0) {
+        return true;
+      }
+      // If it is a FileList, check the size of the first file
+      const file = value[0];
+      return file.size <= MAX_FILE_SIZE;
+    }, "Ukuran file maksimal adalah 3 MB."),
 });
 
 type SpjFormProps = {
@@ -324,6 +336,7 @@ export const SpjForm = ({ onSubmit, onCancel, initialData }: SpjFormProps) => {
               File terpilih: {selectedFileName}
             </p>
           )}
+          <p className="text-xs text-muted-foreground">Ukuran file maksimal 3 MB.</p>
           <FormMessage />
         </FormItem>
         <div className="flex justify-end gap-2 pt-4">
