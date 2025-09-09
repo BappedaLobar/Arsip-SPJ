@@ -17,6 +17,8 @@ interface SpjFiltersProps {
   setSelectedBidang: (bidang: string) => void;
   searchKeyword: string;
   setSearchKeyword: (keyword: string) => void;
+  searchNomorPembukuan: string; // New prop for Nomor Pembukuan search
+  setSearchNomorPembukuan: (keyword: string) => void; // New setter for Nomor Pembukuan search
   resetFilters: () => void;
   onDownloadArchivesClick: () => void;
   isLoadingSpj: boolean;
@@ -35,6 +37,8 @@ export const SpjFilters: React.FC<SpjFiltersProps> = ({
   setSelectedBidang,
   searchKeyword,
   setSearchKeyword,
+  searchNomorPembukuan, // Destructure new prop
+  setSearchNomorPembukuan, // Destructure new setter
   resetFilters,
   onDownloadArchivesClick,
   isLoadingSpj,
@@ -48,10 +52,11 @@ export const SpjFilters: React.FC<SpjFiltersProps> = ({
     selectedYear !== "all" ||
     selectedMonth !== "all" ||
     (isAdmin ? selectedBidang !== "all" : false) ||
-    searchKeyword !== "";
+    searchKeyword !== "" ||
+    searchNomorPembukuan !== ""; // Include new search field in reset logic
 
   return (
-    <div className="flex items-center gap-2 mb-4">
+    <div className="flex flex-wrap items-center gap-2 mb-4"> {/* Use flex-wrap for responsiveness */}
       <Select value={selectedYear} onValueChange={setSelectedYear}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Pilih Tahun" />
@@ -98,7 +103,17 @@ export const SpjFilters: React.FC<SpjFiltersProps> = ({
           ))}
         </SelectContent>
       </Select>
-      <div className="relative flex-grow max-w-xs">
+      <div className="relative flex-grow max-w-xs min-w-[180px]"> {/* Added min-w for better layout */}
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Cari No. Pembukuan..."
+          value={searchNomorPembukuan}
+          onChange={(e) => setSearchNomorPembukuan(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+      <div className="relative flex-grow max-w-xs min-w-[180px]"> {/* Added min-w for better layout */}
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"

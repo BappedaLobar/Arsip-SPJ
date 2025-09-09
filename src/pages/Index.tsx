@@ -32,6 +32,7 @@ const Index = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedBidang, setSelectedBidang] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [searchNomorPembukuan, setSearchNomorPembukuan] = useState<string>(""); // New state for Nomor Pembukuan
 
   // Effect to set initial selectedBidang based on user profile
   useEffect(() => {
@@ -78,6 +79,7 @@ const Index = () => {
     selectedMonth,
     selectedBidang,
     searchKeyword,
+    searchNomorPembukuan, // Pass new search state
     months,
   });
 
@@ -159,6 +161,7 @@ const Index = () => {
       setSelectedBidang(userProfile.bidang);
     }
     setSearchKeyword("");
+    setSearchNomorPembukuan(""); // Reset new search field
   };
 
   const handleLogout = async () => {
@@ -209,6 +212,8 @@ const Index = () => {
         setSelectedBidang={setSelectedBidang}
         searchKeyword={searchKeyword}
         setSearchKeyword={setSearchKeyword}
+        searchNomorPembukuan={searchNomorPembukuan} // Pass new search state
+        setSearchNomorPembukuan={setSearchNomorPembukuan} // Pass new search setter
         resetFilters={resetFilters}
         onDownloadArchivesClick={() => setIsDownloadOptionsOpen(true)}
         isLoadingSpj={isLoadingSpj}

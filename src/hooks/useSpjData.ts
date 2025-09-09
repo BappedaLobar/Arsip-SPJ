@@ -13,6 +13,7 @@ interface UseSpjDataProps {
   selectedMonth: string;
   selectedBidang: string;
   searchKeyword: string;
+  searchNomorPembukuan: string; // New prop for Nomor Pembukuan search
   months: { value: string; label: string }[];
 }
 
@@ -36,6 +37,7 @@ export const useSpjData = ({
   selectedMonth,
   selectedBidang,
   searchKeyword,
+  searchNomorPembukuan, // Destructure new prop
   months,
 }: UseSpjDataProps) => {
   const [spjData, setSpjData] = useState<SPJ[]>([]);
@@ -119,14 +121,24 @@ export const useSpjData = ({
   }, [isSessionLoading, session, fetchSpjData]);
 
   const filteredSpjData = useMemo(() => {
-    if (!searchKeyword) {
-      return spjData;
+    let currentFilteredData = spjData;
+
+    if (searchKeyword) {
+      const lowercasedKeyword = searchKeyword.toLowerCase();
+      currentFilteredData = currentFilteredData.filter(item =>
+        item.uraian.toLowerCase().includes(lowercasedKeyword)
+      );
     }
-    const lowercasedKeyword = searchKeyword.toLowerCase();
-    return spjData.filter(item =>
-      item.uraian.toLowerCase().includes(lowercasedKeyword)
-    );
-  }, [spjData, searchKeyword]);
+
+    if (searchNomorPembukuan) { // New filter for Nomor Pembukuan
+      const lowercasedNomorPembukuan = searchNomorPembukuan.toLowerCase();
+      currentFilteredData = currentFilteredData.filter(item =>
+        item.nomorPembukuan.toLowerCase().includes(lowercasedNomorPembukuan)
+      );
+    }
+
+    return currentFilteredData;
+  }, [spjData, searchKeyword, searchNomorPembukuan]); // Add searchNomorPembukuan to dependencies
 
   const handleSaveSpj = useCallback(async (
     data: Omit<SPJ, "id" | "fileUrl"> & { file?: File | GoogleDriveFile },
